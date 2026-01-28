@@ -13,27 +13,15 @@ app = create_app()
 
 # Configurar para produção
 if os.environ.get('RENDER'):
-    # Usar PostgreSQL se DATABASE_URL estiver disponível, senão SQLite
-    database_url = os.environ.get('DATABASE_URL')
-    if database_url:
-        # Corrigir URL do PostgreSQL se necessário
-        if database_url.startswith('postgres://'):
-            database_url = database_url.replace('postgres://', 'postgresql://', 1)
-        app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-    else:
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
-    
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'production-secret-key')
+    # Forçar SQLite para evitar problemas com PostgreSQL
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'production-secret-key-change-me')
     
     # Criar tabelas se não existirem
     with app.app_context():
         from app import db
         try:
-            # Testar conexão
-            db.engine.connect()
-            print("Conexão com banco estabelecida!")
-            
-            # Criar tabelas
+            print("Configurando banco SQLite...")
             db.create_all()
             print("Tabelas criadas com sucesso!")
             
@@ -53,19 +41,13 @@ if os.environ.get('RENDER'):
                 )
                 db.session.add(admin)
                 db.session.commit()
-                print("Usuário admin criado!")
+                print("Usuário admin criado: admin/admin123")
             else:
                 print("Usuário admin já existe.")
                 
         except Exception as e:
             print(f"Erro ao configurar banco: {e}")
-            # Em caso de erro, usar SQLite como fallback
-            app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
-            try:
-                db.create_all()
-                print("Fallback para SQLite realizado.")
-            except Exception as e2:
-                print(f"Erro crítico: {e2}")
+            raise e
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
