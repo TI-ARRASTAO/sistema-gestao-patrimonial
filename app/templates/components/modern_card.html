@@ -1,0 +1,121 @@
+<!-- Componente de Card Moderno com Glassmorphism -->
+<div class="card interactive fade-in">
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+            </div>
+            <div>
+                <h3 class="font-semibold text-gray-900 dark:text-white">{{ title }}</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ subtitle }}</p>
+            </div>
+        </div>
+        <div class="status-indicator text-green-500" title="Ativo">
+            <span class="text-sm font-medium">Online</span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-4">
+        <div class="text-center">
+            <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ value1 }}</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">{{ label1 }}</div>
+        </div>
+        <div class="text-center">
+            <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{ value2 }}</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">{{ label2 }}</div>
+        </div>
+    </div>
+
+    <div class="flex gap-2">
+        <button class="btn-primary flex-1 action-feedback" onclick="handleAction('primary')">
+            <span>Ação Principal</span>
+        </button>
+        <button class="btn-secondary flex-1 action-feedback" onclick="handleAction('secondary')">
+            <span>Ação Secundária</span>
+        </button>
+    </div>
+</div>
+
+<!-- Estado Vazio Aprimorado -->
+<div class="empty-state fade-in" style="display: none;" id="empty-state">
+    <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m8-5v2m0 0v2m0-2h2m-2 0h-2"/>
+    </svg>
+    <h3>Nenhum item encontrado</h3>
+    <p>Comece criando seu primeiro item para ver os dados aqui.</p>
+    <button class="btn-primary mt-4" onclick="showCreateModal()">
+        Criar Primeiro Item
+    </button>
+</div>
+
+<!-- Loading State com Skeleton -->
+<div class="space-y-4" id="loading-state">
+    <div class="card">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 rounded-xl skeleton"></div>
+            <div class="flex-1">
+                <div class="h-4 bg-gray-200 rounded skeleton mb-2"></div>
+                <div class="h-3 bg-gray-200 rounded skeleton w-2/3"></div>
+            </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="h-8 bg-gray-200 rounded skeleton"></div>
+            <div class="h-8 bg-gray-200 rounded skeleton"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela Aprimorada -->
+<div class="table-enhanced fade-in">
+    <table class="w-full">
+        <thead>
+            <tr>
+                <th class="px-6 py-4 text-left font-semibold">Nome</th>
+                <th class="px-6 py-4 text-left font-semibold">Status</th>
+                <th class="px-6 py-4 text-left font-semibold">Ações</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white dark:bg-gray-800">
+            {% for item in items %}
+            <tr class="stagger-item border-b border-gray-200 dark:border-gray-700">
+                <td class="px-6 py-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                            <span class="text-white text-sm font-bold">{{ item.name[0] }}</span>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-900 dark:text-white">{{ item.name }}</div>
+                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ item.description }}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4">
+                    <span class="status-indicator text-{{ item.status_color }}-500">
+                        {{ item.status }}
+                    </span>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="flex gap-2">
+                        <button class="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors tooltip"
+                                data-tooltip="Editar"
+                                onclick="editItem({{ item.id }})">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                        </button>
+                        <button class="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors tooltip"
+                                data-tooltip="Excluir"
+                                onclick="deleteItem({{ item.id }})">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,5 @@
+ID,Nome,Categoria,Marca,Setor,Cargo,Emprestimo,Compartilhado,AnyDesk,Observacoes
+,Notebook Dell Inspiron,NOTEBOOK,Dell,TI,ANALISTA,NAO,NAO,123456789,Equipamento para desenvolvimento
+,Desktop HP Compaq,DESKTOP,HP,ADMINISTRATIVO,ASSISTENTE,SIM,NAO,,Em uso no setor administrativo
+,Impressora Canon,IMPRESSORA,Canon,FINANCEIRO,AUXILIAR,NAO,SIM,,"Impressora compartilhada, toner novo"
+,Tablet Samsung,TABLET,Samsung,RH,COORDENADOR,NAO,NAO,,Para apresentações

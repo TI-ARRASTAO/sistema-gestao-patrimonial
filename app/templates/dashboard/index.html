@@ -1,0 +1,1438 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Gestão de Ativos{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <header class="mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-white mb-2">Controle de Bens Institucionais</h1>
+                <p class="text-gray-400">Olá, {{ user.name_user }}! Bem-vindo(a) de volta.</p>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <div class="hidden lg:block text-sm text-gray-400">
+                    <kbd class="px-2 py-1 bg-gray-700 rounded text-xs">Ctrl+N</kbd> Novo
+                    <kbd class="px-2 py-1 bg-gray-700 rounded text-xs ml-2">Ctrl+F</kbd> Buscar
+                    <kbd class="px-2 py-1 bg-gray-700 rounded text-xs ml-2">T</kbd> Tema
+                </div>
+                {% if user.role == 'ADMIN' %}
+                <a href="{{ url_for('equipamentos.create_page') }}"
+                   class="bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition duration-300 hover:bg-blue-500 transform hover:scale-105 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Novo Equipamento
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+    {% if user.role == 'ADMIN' %}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-gray-800 shadow-lg rounded-xl p-6 border-l-4 border-red-500 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:scale-105">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-400">Total</p>
+                    <p class="mt-2 text-3xl font-bold text-red-400">{{ kpis.total }}</p>
+                </div>
+                <div class="p-3 bg-red-500/20 rounded-full">
+                    <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        <div class="bg-gray-800 shadow-lg rounded-xl p-6 border-l-4 border-yellow-500 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:scale-105">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-400">Emprestados</p>
+                    <p class="mt-2 text-3xl font-bold text-yellow-400">{{ kpis.em_uso }}</p>
+                </div>
+                <div class="p-3 bg-yellow-500/20 rounded-full">
+                    <svg class="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        <div class="bg-gray-800 shadow-lg rounded-xl p-6 border-l-4 border-green-500 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:scale-105">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-400">Disponíveis</p>
+                    <p class="mt-2 text-3xl font-bold text-green-400">{{ kpis.disponiveis }}</p>
+                </div>
+                <div class="p-3 bg-green-500/20 rounded-full">
+                    <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos Analytics -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+        <div class="bg-gray-800 shadow-lg rounded-xl p-6">
+            <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                Equipamentos por Categoria
+            </h3>
+            <div class="relative h-64 flex items-center justify-center">
+                <canvas id="categoryChart" class="max-w-full max-h-full"></canvas>
+            </div>
+        </div>
+        <div class="bg-gray-800 shadow-lg rounded-xl p-6">
+            <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                </svg>
+                Status dos Equipamentos
+            </h3>
+            <div class="relative h-64 flex items-center justify-center">
+                <canvas id="statusChart" class="max-w-full max-h-full"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-gray-800 shadow-lg rounded-xl p-6 mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                Filtros Avançados
+            </h3>
+            <div class="flex items-center gap-2">
+                <button id="theme-toggle" class="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors" title="Alternar tema">
+                    <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                </button>
+                <button onclick="toggleBulkActions()" class="px-3 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors text-white text-sm flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                    </svg>
+                    Seleção Múltipla
+                </button>
+            </div>
+        </div>
+        <form method="GET" action="{{ url_for('equipamentos.list_equipamentos') }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+            <div class="lg:col-span-2">
+                <label for="q" class="block text-sm font-medium text-gray-300 mb-1">Buscar</label>
+                <div class="relative">
+                    <input type="text" id="q" name="q" value="" placeholder="Nome ou serial..."
+                           class="w-full p-3 pl-10 border border-gray-600 bg-gray-700 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300">
+                    <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+            </div>
+            <div>
+                <label for="categoria" class="block text-sm font-medium text-gray-300 mb-1">Categoria</label>
+                <select id="categoria" name="categoria" class="w-full p-3 border border-gray-600 bg-gray-700 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition duration-150">
+                    <option value="" selected>Todas</option>
+                    <option value="NOTEBOOK">Notebook</option>
+                    <option value="DESKTOP">Desktop</option>
+                    <option value="ACCESS POINT">Access Point</option>
+                    <option value="ROTEADOR">Roteador</option>
+                    <option value="IMPRESSORA">Impressora</option>
+                    <option value="TABLET">Tablet</option>
+                    <option value="TV">TV</option>
+                    <option value="PROJETOR">Projetor</option>
+                    <option value="CELULAR">Celular</option>
+                    <option value="CAIXA DE SOM">Caixa de Som</option>
+                    <option value="PERIFERICOS">Periféricos</option>
+                </select>
+            </div>
+            <div>
+                <label for="status" class="block text-sm font-medium text-gray-300 mb-1">Status</label>
+                <select id="status" name="status" class="w-full p-3 border border-gray-600 bg-gray-700 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition duration-150">
+                    <option value="" selected>Todos</option>
+                    <option value="NAO">Disponível</option>
+                    <option value="SIM">Emprestado</option>
+                </select>
+            </div>
+            <div class="flex space-x-2">
+                <button type="submit" class="w-1/2 lg:w-full bg-blue-600 text-white font-semibold py-3 rounded-xl shadow-md transition-all duration-300 hover:bg-blue-500">
+                    Filtrar
+                </button>
+                <button type="reset" id="clear-filters-button" class="w-1/2 lg:w-full bg-gray-700 text-white font-semibold py-3 rounded-xl shadow-md transition-all duration-300 hover:bg-gray-600">
+                    Limpar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="bg-gray-800 shadow-lg rounded-xl overflow-x-auto transition-all duration-300">
+        <!-- Bulk Actions Bar -->
+        <div id="bulk-actions" class="hidden bg-blue-900/50 p-4 border-b border-gray-700">
+            <div class="flex items-center justify-between">
+                <span class="text-white"><span id="selected-count">0</span> itens selecionados</span>
+                <div class="flex gap-2">
+                    <button onclick="bulkAction('export')" class="px-3 py-1 bg-green-600 hover:bg-green-500 text-white rounded text-sm">
+                        Exportar
+                    </button>
+                    <button onclick="bulkAction('delete')" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-sm">
+                        Excluir
+                    </button>
+                    <button onclick="clearSelection()" class="px-3 py-1 bg-gray-600 hover:bg-gray-500 text-white rounded text-sm">
+                        Limpar
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <table class="min-w-full divide-y divide-gray-700">
+            <thead class="bg-gray-700">
+                <tr>
+                    <th class="px-3 py-3 text-left">
+                        <input type="checkbox" id="select-all" class="rounded bg-gray-600 border-gray-500 text-blue-600 focus:ring-blue-500 hidden">
+                    </th>
+                    <th class="px-3 py-3 text-left text-sm font-medium text-gray-300 uppercase tracking-wider">
+                        <div class="flex items-center gap-2">
+                            <span>ID</span>
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+                            </svg>
+                        </div>
+                    </th>
+                    <th class="px-6 py-3 text-left text-sm font-medium text-gray-300 uppercase tracking-wider">
+                        <div class="flex items-center gap-2">
+                            <span>Nome / Serial</span>
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+                            </svg>
+                        </div>
+                    </th>
+                    <th class="px-6 py-3 text-left text-sm font-medium text-gray-300 uppercase tracking-wider">Categoria</th>
+                    <th class="px-6 py-3 text-left text-sm font-medium text-gray-300 uppercase tracking-wider">Setor</th>
+                    <th class="px-6 py-3 text-left text-sm font-medium text-gray-300 uppercase tracking-wider">Cargo</th>
+                    <th class="px-6 py-3 text-left text-sm font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-sm font-medium text-gray-300 uppercase tracking-wider">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if equipamentos %}
+                    {% for equipamento in equipamentos %}
+                    <tr class="hover:bg-gray-700 transition-all duration-300 equipment-row" data-id="{{ equipamento.id }}">
+                        <td class="px-3 py-4 whitespace-nowrap">
+                            <input type="checkbox" class="equipment-checkbox rounded bg-gray-600 border-gray-500 text-blue-600 focus:ring-blue-500 hidden" value="{{ equipamento.id }}">
+                        </td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-white">
+                            <span class="inline-flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full text-xs font-bold">
+                                {{ equipamento.id }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-white">{{ equipamento.name_response }}</div>
+                            <div class="text-sm text-gray-400">{{ equipamento.marca_category }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white">{{ equipamento.equipamento_category }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white">{{ equipamento.setor_category or '-' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white">{{ equipamento.cargo_category or '-' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if equipamento.emprestimo == 'SIM' %}
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-900 text-yellow-200">Emprestado</span>
+                            {% else %}
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-900 text-green-200">Disponível</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex items-center gap-3">
+                                <button onclick="openEquipmentModal({{ equipamento.id }})" class="text-blue-400 hover:text-blue-300 flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-700 transition-all duration-200">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                    <span class="hidden sm:inline">Ver</span>
+                                </button>
+                                {% if user.role in ['ADMIN', 'USUARIO'] %}
+                                <button onclick="openEditModal({{ equipamento.id }})" class="text-green-400 hover:text-green-300 flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-700 transition-all duration-200">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                    <span class="hidden sm:inline">Editar</span>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="7" class="px-6 py-8 whitespace-nowrap text-center text-base text-gray-400">
+                        Nenhum equipamento encontrado.
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        
+        <!-- Loading State -->
+        <div id="search-loading" class="hidden p-8 text-center">
+            <div class="inline-flex items-center gap-3">
+                <div class="animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent"></div>
+                <span class="text-gray-400">Buscando...</span>
+            </div>
+        </div>
+        
+        <!-- No Results -->
+        <div id="no-results" class="hidden p-8 text-center">
+            <div class="text-gray-400">
+                <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.29-1.009-5.824-2.562M15 17H9m6-2H9m6-2H9m6-2H9m6-2H9"/>
+                </svg>
+                <p>Nenhum equipamento encontrado</p>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-gray-800 shadow-lg rounded-xl p-8 mb-8 text-center">
+        <div class="flex flex-col items-center gap-4">
+            <div class="p-4 bg-blue-600 rounded-full">
+                <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold text-white mb-2">Bem-vindo, {{ user.name_user }}!</h3>
+                <p class="text-gray-400">Você está logado como {{ user.role }}. Use o menu lateral para navegar pelo sistema.</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal de Visualização de Equipamento -->
+<div id="equipment-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 opacity-0" id="modal-container">
+        <div class="flex items-center justify-between p-6 border-b border-gray-700">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-blue-600 rounded-lg">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-white">Detalhes do Equipamento</h3>
+            </div>
+            <button onclick="closeEquipmentModal()" class="text-gray-400 hover:text-white transition-colors p-2 hover:bg-gray-700 rounded-lg">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div id="modal-content" class="p-6">
+            <div class="flex items-center justify-center py-12">
+                <div class="flex flex-col items-center gap-4">
+                    <div class="relative">
+                        <div class="animate-spin rounded-full h-12 w-12 border-4 border-gray-600 border-t-blue-500"></div>
+                        <div class="absolute inset-0 rounded-full h-12 w-12 border-4 border-transparent border-t-blue-400 animate-ping"></div>
+                    </div>
+                    <span class="text-gray-400 font-medium">Carregando dados...</span>
+                </div>
+            </div>
+        </div>
+        <div class="flex justify-between items-center p-6 border-t border-gray-700 bg-gray-750">
+            <div class="text-sm text-gray-400">
+                <span id="modal-timestamp"></span>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="closeEquipmentModal()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    Fechar
+                </button>
+                {% if user.role in ['ADMIN', 'USUARIO'] %}
+                <button id="edit-equipment-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors hidden flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    Editar
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Edição de Equipamento -->
+<div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 opacity-0" id="edit-modal-container">
+        <div class="flex items-center justify-between p-6 border-b border-gray-700">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-green-600 rounded-lg">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-white">Editar Equipamento</h3>
+            </div>
+            <button onclick="closeEditModal()" class="text-gray-400 hover:text-white transition-colors p-2 hover:bg-gray-700 rounded-lg">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <form id="edit-form" class="p-6">
+            <div id="edit-content">
+                <div class="flex items-center justify-center py-12">
+                    <div class="flex flex-col items-center gap-4">
+                        <div class="relative">
+                            <div class="animate-spin rounded-full h-12 w-12 border-4 border-gray-600 border-t-green-500"></div>
+                        </div>
+                        <span class="text-gray-400 font-medium">Carregando formulário...</span>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <div class="flex justify-between items-center p-6 border-t border-gray-700 bg-gray-750">
+            <div class="text-sm text-gray-400">
+                <span>* Campos obrigatórios</span>
+            </div>
+            <div class="flex gap-3">
+                <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit" form="edit-form" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+/* Sistema de cores unificado para Dark/Light Mode */
+:root {
+  /* Dark Mode Colors */
+  --bg-primary-dark: #0f172a;
+  --bg-secondary-dark: #1e293b;
+  --bg-tertiary-dark: #334155;
+  --text-primary-dark: #f8fafc;
+  --text-secondary-dark: #cbd5e1;
+  --text-muted-dark: #94a3b8;
+  --border-dark: #475569;
+  --accent-blue: #3b82f6;
+  --accent-green: #10b981;
+  --accent-yellow: #f59e0b;
+  --accent-red: #ef4444;
+  
+  /* Light Mode Colors */
+  --bg-primary-light: #ffffff;
+  --bg-secondary-light: #f8fafc;
+  --bg-tertiary-light: #f1f5f9;
+  --text-primary-light: #0f172a;
+  --text-secondary-light: #334155;
+  --text-muted-light: #64748b;
+  --border-light: #e2e8f0;
+}
+
+/* Transições suaves */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Dark Mode Styles */
+.dark {
+  background-color: var(--bg-primary-dark);
+}
+
+.dark .bg-gray-50 {
+  background-color: var(--bg-primary-dark) !important;
+}
+
+.dark .bg-gray-800 {
+  background-color: var(--bg-secondary-dark) !important;
+  border-color: var(--border-dark);
+}
+
+.dark .bg-gray-700 {
+  background-color: var(--bg-tertiary-dark) !important;
+  border-color: var(--border-dark);
+}
+
+.dark .bg-gray-600 {
+  background-color: var(--bg-tertiary-dark) !important;
+}
+
+.dark .text-white {
+  color: var(--text-primary-dark) !important;
+}
+
+.dark .text-gray-300 {
+  color: var(--text-secondary-dark) !important;
+}
+
+.dark .text-gray-400 {
+  color: var(--text-muted-dark) !important;
+}
+
+.dark .border-gray-600,
+.dark .border-gray-700 {
+  border-color: var(--border-dark) !important;
+}
+
+.dark .divide-gray-700 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--border-dark) !important;
+}
+
+.dark .hover\:bg-gray-700:hover {
+  background-color: var(--bg-tertiary-dark) !important;
+}
+
+.dark .hover\:bg-gray-600:hover {
+  background-color: var(--border-dark) !important;
+}
+
+.dark .hover\:bg-gray-500:hover {
+  background-color: var(--border-dark) !important;
+}
+
+/* Light Mode Styles */
+.light {
+  background-color: var(--bg-primary-light);
+}
+
+.light .bg-gray-50 {
+  background-color: var(--bg-secondary-light) !important;
+}
+
+.light .bg-gray-800 {
+  background-color: var(--bg-primary-light) !important;
+  border: 1px solid var(--border-light);
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+.light .bg-gray-700 {
+  background-color: var(--bg-tertiary-light) !important;
+  border-color: var(--border-light);
+}
+
+.light .bg-gray-600 {
+  background-color: var(--bg-tertiary-light) !important;
+}
+
+.light .text-white {
+  color: var(--text-primary-light) !important;
+}
+
+.light .text-gray-300 {
+  color: var(--text-secondary-light) !important;
+}
+
+.light .text-gray-400 {
+  color: var(--text-muted-light) !important;
+}
+
+.light .border-gray-600,
+.light .border-gray-700 {
+  border-color: var(--border-light) !important;
+}
+
+.light .divide-gray-700 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--border-light) !important;
+}
+
+.light .hover\:bg-gray-700:hover {
+  background-color: var(--bg-tertiary-light) !important;
+}
+
+.light .hover\:bg-gray-600:hover {
+  background-color: var(--border-light) !important;
+}
+
+.light .hover\:bg-gray-500:hover {
+  background-color: var(--border-light) !important;
+}
+
+/* Cores de status unificadas */
+.text-blue-400,
+.light .text-blue-400 {
+  color: var(--accent-blue) !important;
+}
+
+.text-green-400,
+.light .text-green-400 {
+  color: var(--accent-green) !important;
+}
+
+.text-yellow-400,
+.light .text-yellow-400 {
+  color: var(--accent-yellow) !important;
+}
+
+.text-red-400,
+.light .text-red-400 {
+  color: var(--accent-red) !important;
+}
+
+/* Badges de status */
+.bg-green-900 {
+  background-color: rgba(16, 185, 129, 0.2) !important;
+  color: var(--accent-green) !important;
+}
+
+.bg-yellow-900 {
+  background-color: rgba(245, 158, 11, 0.2) !important;
+  color: var(--accent-yellow) !important;
+}
+
+.bg-red-900 {
+  background-color: rgba(239, 68, 68, 0.2) !important;
+  color: var(--accent-red) !important;
+}
+
+.bg-blue-900 {
+  background-color: rgba(59, 130, 246, 0.2) !important;
+  color: var(--accent-blue) !important;
+}
+
+/* Responsividade dos gráficos */
+.chart-container {
+  position: relative;
+  height: 250px;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .chart-container {
+    height: 200px;
+  }
+}
+
+/* Melhorias nos inputs */
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: var(--bg-tertiary-dark) !important;
+  border-color: var(--border-dark) !important;
+  color: var(--text-primary-dark) !important;
+}
+
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+  border-color: var(--accent-blue) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.light input,
+.light select,
+.light textarea {
+  background-color: var(--bg-primary-light) !important;
+  border-color: var(--border-light) !important;
+  color: var(--text-primary-light) !important;
+}
+
+.light input:focus,
+.light select:focus,
+.light textarea:focus {
+  border-color: var(--accent-blue) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Botões com cores consistentes */
+.bg-blue-600 {
+  background-color: var(--accent-blue) !important;
+}
+
+.bg-green-600 {
+  background-color: var(--accent-green) !important;
+}
+
+.bg-red-600 {
+  background-color: var(--accent-red) !important;
+}
+
+.hover\:bg-blue-500:hover {
+  background-color: #2563eb !important;
+}
+
+.hover\:bg-green-500:hover {
+  background-color: #059669 !important;
+}
+
+.hover\:bg-red-500:hover {
+  background-color: #dc2626 !important;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const clearButton = document.getElementById('clear-filters-button');
+    if (clearButton) {
+        clearButton.addEventListener('click', function() {
+            window.location.href = "{{ url_for('equipamentos.list_equipamentos') }}";
+        });
+    }
+    
+    // Inicializar funcionalidades
+    initRealTimeSearch();
+    initThemeToggle();
+    initBulkActions();
+    loadCharts();
+});
+
+// 1. BUSCA EM TEMPO REAL
+let searchTimeout;
+function initRealTimeSearch() {
+    const searchInput = document.getElementById('q');
+    const categorySelect = document.querySelector('select[name="categoria"]');
+    const statusSelect = document.querySelector('select[name="status"]');
+    
+    function performSearch() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const query = searchInput.value;
+            const categoria = categorySelect.value;
+            const status = statusSelect.value;
+            
+            if (query.length >= 2 || categoria || status) {
+                searchEquipments(query, categoria, status);
+            } else if (query.length === 0 && !categoria && !status) {
+                location.reload();
+            }
+        }, 300);
+    }
+    
+    searchInput.addEventListener('input', performSearch);
+    categorySelect.addEventListener('change', performSearch);
+    statusSelect.addEventListener('change', performSearch);
+}
+
+function searchEquipments(query, categoria, status) {
+    const tbody = document.querySelector('tbody');
+    const loading = document.getElementById('search-loading');
+    const noResults = document.getElementById('no-results');
+    
+    tbody.style.display = 'none';
+    loading.classList.remove('hidden');
+    noResults.classList.add('hidden');
+    
+    const params = new URLSearchParams();
+    if (query) params.append('q', query);
+    if (categoria) params.append('categoria', categoria);
+    if (status) params.append('status', status);
+    
+    fetch(`/dashboard/api/search?${params}`)
+        .then(response => response.json())
+        .then(data => {
+            loading.classList.add('hidden');
+            
+            if (data.success && data.equipamentos.length > 0) {
+                updateTable(data.equipamentos);
+                tbody.style.display = '';
+            } else {
+                noResults.classList.remove('hidden');
+            }
+        })
+        .catch(error => {
+            console.error('Erro na busca:', error);
+            loading.classList.add('hidden');
+            tbody.style.display = '';
+        });
+}
+
+function updateTable(equipamentos) {
+    const tbody = document.querySelector('tbody');
+    tbody.innerHTML = equipamentos.map(eq => `
+        <tr class="hover:bg-gray-700 transition-all duration-300 equipment-row" data-id="${eq.id}">
+            <td class="px-3 py-4 whitespace-nowrap">
+                <input type="checkbox" class="equipment-checkbox rounded bg-gray-600 border-gray-500 text-blue-600 focus:ring-blue-500 hidden" value="${eq.id}">
+            </td>
+            <td class="px-3 py-4 whitespace-nowrap text-sm text-white">
+                <span class="inline-flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full text-xs font-bold">
+                    ${eq.id}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-white">${eq.name_response}</div>
+                <div class="text-sm text-gray-400">${eq.marca_category}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-white">${eq.equipamento_category}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-white">${eq.setor_category}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-white">${eq.cargo_category}</td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                    eq.emprestimo === 'SIM' ? 'bg-yellow-900 text-yellow-200' : 'bg-green-900 text-green-200'
+                }">${
+                    eq.emprestimo === 'SIM' ? 'Emprestado' : 'Disponível'
+                }</span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <div class="flex items-center gap-3">
+                    <button onclick="openEquipmentModal(${eq.id})" class="text-blue-400 hover:text-blue-300 flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-700 transition-all duration-200">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                        <span class="hidden sm:inline">Ver</span>
+                    </button>
+                    <button onclick="openEditModal(${eq.id})" class="text-green-400 hover:text-green-300 flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-700 transition-all duration-200 {% if user.role not in ['ADMIN', 'USUARIO'] %}hidden{% endif %}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        <span class="hidden sm:inline">Editar</span>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+    
+    // Reativar bulk actions se estiver ativo
+    if (!document.getElementById('select-all').classList.contains('hidden')) {
+        document.querySelectorAll('.equipment-checkbox').forEach(cb => cb.classList.remove('hidden'));
+    }
+}
+
+// 2. TEMA DARK/LIGHT
+function initThemeToggle() {
+    const themeToggle = document.getElementById('theme-toggle');
+    
+    // Verificar tema atual
+    const isDark = document.documentElement.classList.contains('dark');
+    updateThemeIcon(isDark);
+    
+    themeToggle.addEventListener('click', () => {
+        const currentlyDark = document.documentElement.classList.contains('dark');
+        
+        if (currentlyDark) {
+            // Mudar para light
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.add('light');
+            document.body.classList.remove('bg-gray-900');
+            document.body.classList.add('bg-gray-50');
+            localStorage.setItem('theme', 'light');
+            updateThemeIcon(false);
+        } else {
+            // Mudar para dark
+            document.documentElement.classList.remove('light');
+            document.documentElement.classList.add('dark');
+            document.body.classList.remove('bg-gray-50');
+            document.body.classList.add('bg-gray-900');
+            localStorage.setItem('theme', 'dark');
+            updateThemeIcon(true);
+        }
+        
+        // Recarregar gráficos com novo tema
+        setTimeout(() => {
+            loadCharts();
+        }, 100);
+    });
+}
+
+function updateThemeIcon(isDark) {
+    const themeToggle = document.getElementById('theme-toggle');
+    if (isDark) {
+        themeToggle.innerHTML = `
+            <svg class="w-5 h-5" style="color: #f59e0b" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+        `;
+        themeToggle.title = 'Mudar para tema claro';
+        themeToggle.className = 'p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors';
+    } else {
+        themeToggle.innerHTML = `
+            <svg class="w-5 h-5" style="color: #64748b" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+            </svg>
+        `;
+        themeToggle.title = 'Mudar para tema escuro';
+        themeToggle.className = 'p-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors';
+    }
+}
+
+// 3. SELEÇÃO MÚLTIPLA
+function initBulkActions() {
+    const selectAll = document.getElementById('select-all');
+    
+    selectAll.addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.equipment-checkbox');
+        checkboxes.forEach(cb => {
+            cb.checked = this.checked;
+        });
+        updateBulkActionsBar();
+    });
+    
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('equipment-checkbox')) {
+            updateBulkActionsBar();
+        }
+    });
+}
+
+function toggleBulkActions() {
+    const selectAll = document.getElementById('select-all');
+    const checkboxes = document.querySelectorAll('.equipment-checkbox');
+    const isHidden = selectAll.classList.contains('hidden');
+    
+    if (isHidden) {
+        selectAll.classList.remove('hidden');
+        checkboxes.forEach(cb => cb.classList.remove('hidden'));
+    } else {
+        selectAll.classList.add('hidden');
+        checkboxes.forEach(cb => {
+            cb.classList.add('hidden');
+            cb.checked = false;
+        });
+        document.getElementById('bulk-actions').classList.add('hidden');
+    }
+}
+
+function updateBulkActionsBar() {
+    const selected = document.querySelectorAll('.equipment-checkbox:checked');
+    const bulkActions = document.getElementById('bulk-actions');
+    const selectedCount = document.getElementById('selected-count');
+    
+    if (selected.length > 0) {
+        bulkActions.classList.remove('hidden');
+        selectedCount.textContent = selected.length;
+    } else {
+        bulkActions.classList.add('hidden');
+    }
+}
+
+function clearSelection() {
+    document.querySelectorAll('.equipment-checkbox').forEach(cb => cb.checked = false);
+    document.getElementById('select-all').checked = false;
+    updateBulkActionsBar();
+}
+
+function bulkAction(action) {
+    const selected = Array.from(document.querySelectorAll('.equipment-checkbox:checked')).map(cb => cb.value);
+    
+    if (selected.length === 0) {
+        showNotification('Nenhum item selecionado', 'warning');
+        return;
+    }
+    
+    if (action === 'export') {
+        window.open(`/equipamentos/export?ids=${selected.join(',')}`, '_blank');
+    } else if (action === 'delete') {
+        if (confirm(`Deseja excluir ${selected.length} equipamentos?`)) {
+            // Implementar exclusão em lote
+            showNotification('Funcionalidade em desenvolvimento', 'info');
+        }
+    }
+}
+
+// 4. GRÁFICOS
+let categoryChart, statusChart;
+
+function loadCharts() {
+    // Destruir gráficos existentes
+    if (categoryChart) categoryChart.destroy();
+    if (statusChart) statusChart.destroy();
+    
+    fetch('/dashboard/api/analytics')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                createCategoryChart(data.categorias);
+                createStatusChart(data.status);
+            }
+        })
+        .catch(error => console.error('Erro ao carregar gráficos:', error));
+}
+
+function createCategoryChart(data) {
+    const ctx = document.getElementById('categoryChart').getContext('2d');
+    const isDark = document.documentElement.classList.contains('dark');
+    const textColor = isDark ? '#cbd5e1' : '#334155';
+    const backgroundColor = isDark ? '#1e293b' : '#ffffff';
+    const borderColor = isDark ? '#475569' : '#e2e8f0';
+    
+    // Verificar se há dados
+    if (!data || data.length === 0) {
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.fillStyle = textColor;
+        ctx.font = '14px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillText('Nenhum dado disponível', ctx.canvas.width / 2, ctx.canvas.height / 2);
+        return;
+    }
+    
+    categoryChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: data.map(item => item.name),
+            datasets: [{
+                data: data.map(item => item.value),
+                backgroundColor: [
+                    '#3b82f6', '#10b981', '#f59e0b', '#ef4444',
+                    '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'
+                ],
+                borderWidth: 3,
+                borderColor: backgroundColor,
+                hoverBorderWidth: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: textColor,
+                        font: { size: 12, family: 'Inter' },
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: backgroundColor,
+                    titleColor: textColor,
+                    bodyColor: textColor,
+                    borderColor: borderColor,
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    displayColors: true
+                }
+            }
+        }
+    });
+}
+
+function createStatusChart(data) {
+    const ctx = document.getElementById('statusChart').getContext('2d');
+    const isDark = document.documentElement.classList.contains('dark');
+    const textColor = isDark ? '#cbd5e1' : '#334155';
+    const backgroundColor = isDark ? '#1e293b' : '#ffffff';
+    const borderColor = isDark ? '#475569' : '#e2e8f0';
+    const gridColor = isDark ? '#475569' : '#e2e8f0';
+    
+    // Verificar se há dados
+    if (!data || data.length === 0) {
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.fillStyle = textColor;
+        ctx.font = '14px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillText('Nenhum dado disponível', ctx.canvas.width / 2, ctx.canvas.height / 2);
+        return;
+    }
+    
+    statusChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.map(item => item.name),
+            datasets: [{
+                data: data.map(item => item.value),
+                backgroundColor: data.map(item => 
+                    item.name === 'Disponível' ? '#10b981' : '#f59e0b'
+                ),
+                borderRadius: 8,
+                borderSkipped: false,
+                hoverBackgroundColor: data.map(item => 
+                    item.name === 'Disponível' ? '#059669' : '#d97706'
+                )
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: backgroundColor,
+                    titleColor: textColor,
+                    bodyColor: textColor,
+                    borderColor: borderColor,
+                    borderWidth: 1,
+                    cornerRadius: 8
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { 
+                        color: textColor,
+                        font: { size: 11, family: 'Inter' }
+                    },
+                    grid: { 
+                        color: gridColor,
+                        lineWidth: 1
+                    },
+                    border: {
+                        color: borderColor
+                    }
+                },
+                x: {
+                    ticks: { 
+                        color: textColor,
+                        font: { size: 11, family: 'Inter' }
+                    },
+                    grid: { display: false },
+                    border: {
+                        color: borderColor
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Funções do Modal de Edição
+function openEditModal(equipmentId) {
+    const modal = document.getElementById('edit-modal');
+    const modalContainer = document.getElementById('edit-modal-container');
+    const editContent = document.getElementById('edit-content');
+    const editForm = document.getElementById('edit-form');
+    
+    // Mostrar modal
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modalContainer.classList.remove('scale-95', 'opacity-0');
+        modalContainer.classList.add('scale-100', 'opacity-100');
+    }, 10);
+    
+    // Buscar dados para edição
+    fetch(`/dashboard/api/equipamentos/${equipmentId}`)
+        .then(response => response.json())
+        .then(data => {
+            editContent.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Nome *</label>
+                            <input type="text" name="name_response" value="${data.name_response || ''}" required
+                                   class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Marca *</label>
+                            <input type="text" name="marca_category" value="${data.marca_category || ''}" required
+                                   class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Modelo</label>
+                            <input type="text" name="modelo_category" value="${data.modelo_category || ''}"
+                                   class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Serial</label>
+                            <input type="text" name="serial_number" value="${data.serial_number || ''}"
+                                   class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Categoria *</label>
+                            <select name="equipamento_category" required
+                                    class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                <option value="">Selecione...</option>
+                                ${['NOTEBOOK', 'DESKTOP', 'ACCESS POINT', 'ROTEADOR', 'IMPRESSORA', 'TABLET', 'TV', 'PROJETOR', 'CELULAR', 'CAIXA DE SOM', 'PERIFERICOS'].map(cat => 
+                                    `<option value="${cat}" ${data.equipamento_category === cat ? 'selected' : ''}>${cat}</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Setor</label>
+                            <select name="setor_category"
+                                    class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                <option value="">Selecione...</option>
+                                ${['CJ', 'CCA', 'CEI', 'ADMINISTRATIVO', 'RH', 'TI', 'COMUNICACAO', 'SOCIAL', 'FINANCEIRO', 'PRODUCAO', 'ARRASTART', 'ENFERMARIA'].map(setor => 
+                                    `<option value="${setor}" ${data.setor_category === setor ? 'selected' : ''}>${setor}</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Cargo</label>
+                            <select name="cargo_category"
+                                    class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                <option value="">Selecione...</option>
+                                ${['GERENTE', 'COORDENADOR', 'ASSISTENTE', 'AUXILIAR', 'ANALISTA', 'EDUCADOR', 'DIRETORIA', 'ENFERMEIRA', 'RH'].map(cargo => 
+                                    `<option value="${cargo}" ${data.cargo_category === cargo ? 'selected' : ''}>${cargo}</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Valor</label>
+                            <input type="number" name="valor_category" value="${data.valor_category || ''}" step="0.01" min="0"
+                                   class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Status</label>
+                            <select name="emprestimo"
+                                    class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                <option value="NAO" ${data.emprestimo === 'NAO' ? 'selected' : ''}>Disponível</option>
+                                <option value="SIM" ${data.emprestimo === 'SIM' ? 'selected' : ''}>Emprestado</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Observações</label>
+                    <textarea name="observacoes_category" rows="3"
+                              class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Observações adicionais...">${data.observacoes_category || ''}</textarea>
+                </div>
+                <input type="hidden" name="equipment_id" value="${equipmentId}">
+            `;
+        })
+        .catch(error => {
+            console.error('Erro ao carregar dados:', error);
+            editContent.innerHTML = `
+                <div class="text-center py-12">
+                    <div class="text-red-400 mb-4">
+                        <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <p class="text-red-400">Erro ao carregar dados para edição</p>
+                </div>
+            `;
+        });
+    
+    // Configurar submit do formulário
+    editForm.onsubmit = function(e) {
+        e.preventDefault();
+        saveEquipment(equipmentId);
+    };
+}
+
+function closeEditModal() {
+    const modal = document.getElementById('edit-modal');
+    const modalContainer = document.getElementById('edit-modal-container');
+    
+    modalContainer.classList.remove('scale-100', 'opacity-100');
+    modalContainer.classList.add('scale-95', 'opacity-0');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+function saveEquipment(equipmentId) {
+    const form = document.getElementById('edit-form');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    // Mostrar loading no botão
+    const saveBtn = form.querySelector('button[type="submit"]');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div> Salvando...';
+    saveBtn.disabled = true;
+    
+    fetch(`/dashboard/api/equipamentos/${equipmentId}/update`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showNotification('Equipamento atualizado com sucesso!', 'success');
+            closeEditModal();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification(result.error || 'Erro ao salvar equipamento', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao salvar:', error);
+        showNotification('Erro ao salvar equipamento', 'error');
+    })
+    .finally(() => {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+    });
+}
+
+// Funções do Modal
+function openEquipmentModal(equipmentId) {
+    const modal = document.getElementById('equipment-modal');
+    const modalContainer = document.getElementById('modal-container');
+    const modalContent = document.getElementById('modal-content');
+    const editBtn = document.getElementById('edit-equipment-btn');
+    const timestamp = document.getElementById('modal-timestamp');
+    
+    // Mostrar modal com animação
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modalContainer.classList.remove('scale-95', 'opacity-0');
+        modalContainer.classList.add('scale-100', 'opacity-100');
+    }, 10);
+    
+    // Atualizar timestamp
+    timestamp.textContent = `Carregado em ${new Date().toLocaleString('pt-BR')}`;
+    
+    // Mostrar loading elegante
+    modalContent.innerHTML = `
+        <div class="flex items-center justify-center py-12">
+            <div class="flex flex-col items-center gap-4">
+                <div class="relative">
+                    <div class="animate-spin rounded-full h-12 w-12 border-4 border-gray-600 border-t-blue-500"></div>
+                    <div class="absolute inset-0 rounded-full h-12 w-12 border-4 border-transparent border-t-blue-400 animate-ping"></div>
+                </div>
+                <span class="text-gray-400 font-medium">Carregando dados...</span>
+            </div>
+        </div>
+    `;
+    
+    // Buscar dados do equipamento
+    fetch(`/dashboard/api/equipamentos/${equipmentId}`)
+        .then(response => response.json())
+        .then(data => {
+            modalContent.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div class="bg-gray-700 p-4 rounded-lg">
+                            <label class="block text-sm font-medium text-gray-400 mb-1">Nome</label>
+                            <p class="text-white font-semibold text-lg">${data.name_response || '-'}</p>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-lg">
+                            <label class="block text-sm font-medium text-gray-400 mb-1">Marca</label>
+                            <p class="text-white">${data.marca_category || '-'}</p>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-lg">
+                            <label class="block text-sm font-medium text-gray-400 mb-1">Modelo</label>
+                            <p class="text-white">${data.modelo_category || '-'}</p>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-lg">
+                            <label class="block text-sm font-medium text-gray-400 mb-1">Serial</label>
+                            <p class="text-white font-mono bg-gray-800 px-3 py-1 rounded text-sm">${data.serial_category || '-'}</p>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-lg">
+                            <label class="block text-sm font-medium text-gray-400 mb-1">Categoria</label>
+                            <span class="inline-flex px-3 py-1 text-sm font-medium rounded-full bg-blue-900 text-blue-200">
+                                ${data.equipamento_category || '-'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="bg-gray-700 p-4 rounded-lg">
+                            <label class="block text-sm font-medium text-gray-400 mb-1">Status</label>
+                            <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
+                                data.emprestimo === 'SIM' ? 'bg-yellow-900 text-yellow-200' : 'bg-green-900 text-green-200'
+                            }">
+                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="${data.emprestimo === 'SIM' ? 'M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z' : 'M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z'}" clip-rule="evenodd"/>
+                                </svg>
+                                ${data.emprestimo === 'SIM' ? 'Emprestado' : 'Disponível'}
+                            </span>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-lg">
+                            <label class="block text-sm font-medium text-gray-400 mb-1">Setor</label>
+                            <p class="text-white">${data.setor_category || '-'}</p>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-lg">
+                            <label class="block text-sm font-medium text-gray-400 mb-1">Cargo</label>
+                            <p class="text-white">${data.cargo_category || '-'}</p>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-lg">
+                            <label class="block text-sm font-medium text-gray-400 mb-1">Data de Cadastro</label>
+                            <p class="text-white">${data.data_cadastro ? new Date(data.data_cadastro).toLocaleDateString('pt-BR') : '-'}</p>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-lg">
+                            <label class="block text-sm font-medium text-gray-400 mb-1">Valor</label>
+                            <p class="text-white font-semibold">${data.valor_category ? 'R$ ' + parseFloat(data.valor_category).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '-'}</p>
+                        </div>
+                    </div>
+                </div>
+                ${data.observacoes_category ? `
+                    <div class="mt-6 pt-6 border-t border-gray-700">
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Observações</label>
+                        <div class="bg-gray-700 p-4 rounded-lg">
+                            <p class="text-white">${data.observacoes_category}</p>
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+            
+            // Configurar botão de editar (apenas para ADMIN e USUARIO)
+            {% if user.role in ['ADMIN', 'USUARIO'] %}
+            editBtn.classList.remove('hidden');
+            editBtn.onclick = () => {
+                closeEquipmentModal();
+                setTimeout(() => openEditModal(equipmentId), 300);
+            };
+            {% else %}
+            editBtn.classList.add('hidden');
+            {% endif %}
+        })
+        .catch(error => {
+            console.error('Erro ao carregar equipamento:', error);
+            modalContent.innerHTML = `
+                <div class="text-center py-12">
+                    <div class="text-red-400 mb-4">
+                        <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-red-400 mb-2">Erro ao carregar dados</h3>
+                    <p class="text-gray-400">Não foi possível carregar os dados do equipamento</p>
+                </div>
+            `;
+            editBtn.classList.add('hidden');
+        });
+}
+
+function closeEquipmentModal() {
+    const modal = document.getElementById('equipment-modal');
+    const modalContainer = document.getElementById('modal-container');
+    
+    modalContainer.classList.remove('scale-100', 'opacity-100');
+    modalContainer.classList.add('scale-95', 'opacity-0');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+// Fechar modal ao clicar fora
+document.getElementById('equipment-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeEquipmentModal();
+    }
+});
+
+document.getElementById('edit-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeEditModal();
+    }
+});
+
+// ATALHOS DE TECLADO
+document.addEventListener('keydown', function(e) {
+    // ESC - Fechar modais
+    if (e.key === 'Escape') {
+        closeEquipmentModal();
+        closeEditModal();
+    }
+    
+    // Ctrl+N - Novo equipamento
+    if (e.ctrlKey && e.key === 'n') {
+        e.preventDefault();
+        window.location.href = '/equipamentos/create';
+    }
+    
+    // Ctrl+F - Focar na busca
+    if (e.ctrlKey && e.key === 'f') {
+        e.preventDefault();
+        document.getElementById('q').focus();
+    }
+    
+    // Ctrl+A - Selecionar todos (quando bulk actions ativo)
+    if (e.ctrlKey && e.key === 'a' && !document.getElementById('select-all').classList.contains('hidden')) {
+        e.preventDefault();
+        document.getElementById('select-all').click();
+    }
+    
+    // T - Toggle tema
+    if (e.key === 't' && !e.ctrlKey && !e.altKey && document.activeElement.tagName !== 'INPUT') {
+        document.getElementById('theme-toggle').click();
+    }
+});
+</script>
+{% endblock %}

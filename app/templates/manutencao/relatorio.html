@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Relatório de Manutenção{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Relatório de Manutenção</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('manutencao.index') }}">Manutenção</a></li>
+        <li class="breadcrumb-item active">Relatório</li>
+    </ol>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-filter me-1"></i>
+            Filtros
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Data Início</label>
+                    <input type="date" class="form-control" name="data_inicio" value="{{ filters.data_inicio if filters else '' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Data Fim</label>
+                    <input type="date" class="form-control" name="data_fim" value="{{ filters.data_fim if filters else '' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Tipo</label>
+                    <select class="form-select" name="tipo_manutencao">
+                        <option value="">Todos</option>
+                        <option value="PREVENTIVA" {% if filters and filters.tipo_manutencao == 'PREVENTIVA' %}selected{% endif %}>Preventiva</option>
+                        <option value="CORRETIVA" {% if filters and filters.tipo_manutencao == 'CORRETIVA' %}selected{% endif %}>Corretiva</option>
+                        <option value="OUTROS" {% if filters and filters.tipo_manutencao == 'OUTROS' %}selected{% endif %}>Outros</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" name="status">
+                        <option value="">Todos</option>
+                        <option value="AGENDADA" {% if filters and filters.status == 'AGENDADA' %}selected{% endif %}>Agendada</option>
+                        <option value="CONCLUIDA" {% if filters and filters.status == 'CONCLUIDA' %}selected{% endif %}>Concluída</option>
+                    </select>
+                </div>
+                <div class="col-12 text-end">
+                    <button type="submit" class="btn btn-primary">Filtrar</button>
+                    <a href="{{ url_for('manutencao.relatorio') }}" class="btn btn-secondary">Limpar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-table me-1"></i>
+            Resultados
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <div class="alert alert-info">
+                        Total Registros: <strong>{{ total_manutencoes }}</strong>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="alert alert-success">
+                        Concluídas: <strong>{{ manutencoes_concluidas }}</strong>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="alert alert-warning">
+                        Custo Total: <strong>R$ {{ "%.2f"|format(custo_total) }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped" id="datatablesSimple">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Equipamento</th>
+                            <th>Tipo</th>
+                            <th>Status</th>
+                            <th>Custo</th>
+                            <th>Responsável</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in manutencoes %}
+                        <tr>
+                            <td>{{ m.data_manutencao.strftime('%d/%m/%Y') }}</td>
+                            <td>{{ m.equipamento.name_response }}</td>
+                            <td>{{ m.tipo_manutencao }}</td>
+                            <td>{{ m.status }}</td>
+                            <td>R$ {{ "%.2f"|format(m.custo_real or m.custo_estimado or 0) }}</td>
+                            <td>{{ m.responsavel or '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

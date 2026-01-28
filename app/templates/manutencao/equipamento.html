@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Histórico de Manutenção{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Histórico de Manutenção</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('manutencao.index') }}">Manutenção</a></li>
+        <li class="breadcrumb-item active">{{ equipamento.name_response }}</li>
+    </ol>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Detalhes do Equipamento
+                </div>
+                <div class="card-body">
+                    <p><strong>Nome:</strong> {{ equipamento.name_response }}</p>
+                    <p><strong>Categoria:</strong> {{ equipamento.equipamento_category }}</p>
+                    <p><strong>Marca:</strong> {{ equipamento.marca_category }}</p>
+                    <p><strong>Setor:</strong> {{ equipamento.setor_category }}</p>
+                    <p><strong>Serial:</strong> {{ equipamento.serial_number or 'N/A' }}</p>
+                    <p><strong>Aquisição:</strong> {{ equipamento.data_aquisicao.strftime('%d/%m/%Y') if equipamento.data_aquisicao else 'N/A' }}</p>
+                    
+                    <hr>
+                    
+                    <h5>Status de Manutenção</h5>
+                    {% if status_manutencao == 'VENCIDA' %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle"></i> Vencida
+                            <br>Prevista: {{ proxima_manutencao.strftime('%d/%m/%Y') if proxima_manutencao else 'N/A' }}
+                        </div>
+                    {% elif status_manutencao == 'PROXIMA' %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-clock"></i> Próxima
+                            <br>Prevista: {{ proxima_manutencao.strftime('%d/%m/%Y') if proxima_manutencao else 'N/A' }}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> Em Dia
+                            <br>Prevista: {{ proxima_manutencao.strftime('%d/%m/%Y') if proxima_manutencao else 'N/A' }}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('manutencao.agendar_manutencao', equipamento_id=equipamento.id) }}" class="btn btn-primary">
+                            Agendar Nova Manutenção
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-history me-1"></i>
+                    Histórico
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Tipo</th>
+                                    <th>Descrição</th>
+                                    <th>Status</th>
+                                    <th>Custo</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for m in manutencoes %}
+                                <tr>
+                                    <td>{{ m.data_manutencao.strftime('%d/%m/%Y') }}</td>
+                                    <td>{{ m.tipo_manutencao }}</td>
+                                    <td>{{ m.descricao }}</td>
+                                    <td>
+                                        {% if m.status == 'CONCLUIDA' %}
+                                            <span class="badge bg-success">Concluída</span>
+                                        {% elif m.status == 'AGENDADA' %}
+                                            <span class="badge bg-warning text-dark">Agendada</span>
+                                        {% elif m.status == 'EM_ANDAMENTO' %}
+                                            <span class="badge bg-info">Em Andamento</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ m.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>R$ {{ "%.2f"|format(m.custo_real or m.custo_estimado or 0) }}</td>
+                                    <td>
+                                        {% if m.status != 'CONCLUIDA' and m.status != 'CANCELADA' %}
+                                        <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#concluirModal{{ m.id }}">
+                                            Concluir
+                                        </button>
+                                        
+                                        <!-- Modal Conclusão -->
+                                        <div class="modal fade" id="concluirModal{{ m.id }}" tabindex="-1">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <form action="{{ url_for('manutencao.registrar_manutencao', manutencao_id=m.id) }}" method="POST" class="concluir-form">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Concluir Manutenção</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Custo Real (R$)</label>
+                                                                <input type="number" step="0.01" class="form-control" name="custo_real" value="{{ m.custo_estimado }}">
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Observações de Conclusão</label>
+                                                                <textarea class="form-control" name="observacoes_conclusao" rows="3"></textarea>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                            <button type="submit" class="btn btn-success">Confirmar Conclusão</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const forms = document.querySelectorAll('.concluir-form');
+    forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrf_token')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    location.reload();
+                } else {
+                    alert('Erro: ' + data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    });
+});
+</script>
+{% endblock %}

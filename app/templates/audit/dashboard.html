@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard de Auditoria | Sistema de Gestão Patrimonial{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-8">
+    <!-- Header -->
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-white">Dashboard de Auditoria</h1>
+            <p class="text-gray-400 mt-1">Monitoramento e análise de atividades do sistema</p>
+        </div>
+        
+        <div class="flex items-center gap-3">
+            <button onclick="refreshDashboard()" class="p-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors" title="Atualizar">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+            </button>
+            <button onclick="exportReports()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-500 transition-colors flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Exportar
+            </button>
+        </div>
+    </div>
+
+    <!-- Compliance Score -->
+    <div class="bg-gray-800 rounded-xl p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-white">Score de Compliance</h3>
+            <span class="text-2xl font-bold {{ 'text-green-400' if compliance.compliance_score >= 85 else 'text-yellow-400' if compliance.compliance_score >= 70 else 'text-red-400' }}">
+                {{ compliance.compliance_score }}/100
+            </span>
+        </div>
+        
+        <div class="w-full bg-gray-700 rounded-full h-3 mb-4">
+            <div class="h-3 rounded-full {{ 'bg-green-500' if compliance.compliance_score >= 85 else 'bg-yellow-500' if compliance.compliance_score >= 70 else 'bg-red-500' }}" 
+                 style="width: {{ compliance.compliance_score }}%"></div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div class="text-center">
+                <div class="text-gray-400">Usuários Ativos</div>
+                <div class="text-white font-semibold">{{ compliance.governance_metrics.active_users }}</div>
+            </div>
+            <div class="text-center">
+                <div class="text-gray-400">Logs de Auditoria</div>
+                <div class="text-white font-semibold">{{ compliance.governance_metrics.audit_logs_count }}</div>
+            </div>
+            <div class="text-center">
+                <div class="text-gray-400">Atividades Suspeitas</div>
+                <div class="text-white font-semibold">{{ compliance.security_assessment.suspicious_activities }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métricas por Período -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Últimas 24h -->
+        <div class="bg-gray-800 rounded-xl p-6">
+            <h4 class="text-lg font-semibold text-white mb-4">Últimas 24 Horas</h4>
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Total de Ações</span>
+                    <span class="text-white font-semibold">{{ metrics.last_24h.total_actions }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Usuários Ativos</span>
+                    <span class="text-white font-semibold">{{ metrics.last_24h.actions_by_user | length }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Ações Críticas</span>
+                    <span class="text-red-400 font-semibold">{{ metrics.last_24h.critical_actions | length }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Últimos 7 dias -->
+        <div class="bg-gray-800 rounded-xl p-6">
+            <h4 class="text-lg font-semibold text-white mb-4">Últimos 7 Dias</h4>
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Total de Ações</span>
+                    <span class="text-white font-semibold">{{ metrics.last_7d.total_actions }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Usuários Ativos</span>
+                    <span class="text-white font-semibold">{{ metrics.last_7d.actions_by_user | length }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Ações Críticas</span>
+                    <span class="text-red-400 font-semibold">{{ metrics.last_7d.critical_actions | length }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Últimos 30 dias -->
+        <div class="bg-gray-800 rounded-xl p-6">
+            <h4 class="text-lg font-semibold text-white mb-4">Últimos 30 Dias</h4>
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Total de Ações</span>
+                    <span class="text-white font-semibold">{{ metrics.last_30d.total_actions }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Usuários Ativos</span>
+                    <span class="text-white font-semibold">{{ metrics.last_30d.actions_by_user | length }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Ações Críticas</span>
+                    <span class="text-red-400 font-semibold">{{ metrics.last_30d.critical_actions | length }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações Recentes -->
+    <div class="bg-gray-800 rounded-xl p-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Ações Recentes</h3>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-700">
+                <thead>
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Timestamp</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Usuário</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Ação</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Tabela</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">ID</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-700">
+                    {% for action in metrics.last_7d.recent_actions[:10] %}
+                    <tr class="hover:bg-gray-700">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            {{ action.timestamp[:19] | replace('T', ' ') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white">{{ action.user }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                {{ 'bg-red-900/50 text-red-300' if action.action in ['DELETE', 'CLEAR_ALL'] else 
+                                   'bg-yellow-900/50 text-yellow-300' if action.action in ['UPDATE', 'EXPORT'] else 
+                                   'bg-green-900/50 text-green-300' }}">
+                                {{ action.action }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ action.table }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ action.record_id or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function refreshDashboard() {
+    location.reload();
+}
+
+function exportReports() {
+    window.open('/audit/export/compliance?format=json', '_blank');
+}
+</script>
+{% endblock %}

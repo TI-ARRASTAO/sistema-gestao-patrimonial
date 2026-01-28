@@ -1,0 +1,739 @@
+{% extends "base.html" %}
+
+{% block title %}Equipamentos | Sistema de Gestão Patrimonial{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-btn {
+        @apply px-4 py-2 rounded-lg border-2 transition-all duration-200 text-sm font-medium;
+    }
+    .filter-btn.active {
+        @apply bg-blue-600 border-blue-500 text-white shadow-lg transform scale-105;
+    }
+    .filter-btn:not(.active) {
+        @apply bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 hover:border-gray-500;
+    }
+    
+    .smart-search {
+        @apply w-full p-4 pr-16 bg-gray-800 border-2 border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-300;
+    }
+    
+    .filter-tag {
+        @apply inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600/20 border border-blue-500/30 rounded-full text-sm text-blue-300 animate-fade-in;
+    }
+    
+    thead.table-header,
+    thead.table-header tr,
+    thead.table-header th {
+        background: #3b82f6 !important;
+        background-color: #3b82f6 !important;
+        color: rgba(33, 41, 77, 0.692) !important;
+    }
+    
+    .table-body {
+        background-color: #1e3a8a !important;
+    }
+    
+    .table-body tr {
+        background-color: #1e3a8a !important;
+    }
+    
+    .table-body td {
+        background-color: #1e3a8a !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-8">
+    <!-- Header Otimizado -->
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-white">Equipamentos</h1>
+            <p class="text-gray-400 mt-1">{{ kpis.total }} equipamentos • {{ kpis.disponiveis }} disponíveis • {{ kpis.em_uso }} em uso • {{ kpis.quebrados }} quebrados</p>
+        </div>
+        
+        <div class="flex items-center gap-3">
+            <button onclick="window.location.reload()" class="p-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors" title="Atualizar">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+            </button>
+            <button onclick="openClearPatrimonioModal()" class="p-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition-colors" title="Zerar Patrimônio">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+            </button>
+            <a href="{{ url_for('equipamentos.create_page') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-500 transition-colors flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                </svg>
+                Novo
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros Inteligentes -->
+    <div class="bg-gradient-to-r from-gray-800 to-gray-700 rounded-xl shadow-2xl border border-gray-600">
+        <!-- Header dos Filtros -->
+        <div class="px-6 py-4 border-b border-gray-600">
+            <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                </svg>
+                Filtros e Busca
+            </h3>
+        </div>
+        
+        <div class="p-6 space-y-6">
+            <!-- Busca Principal -->
+            <div class="relative">
+                <input type="text" id="smart-search" placeholder="Buscar equipamentos..." 
+                       class="smart-search" value="{{ request.args.get('q', '') }}" autocomplete="off">
+                <div class="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                    <div id="search-loading" class="hidden w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                    <button onclick="clearSearch()" class="text-gray-400 hover:text-white transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Seção de Status -->
+            <div class="border-t border-gray-600 pt-6">
+                <h4 class="text-sm font-medium text-gray-300 mb-3">Status dos Equipamentos</h4>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="applyFilter('status', '')" class="filter-btn {{ 'active' if not request.args.get('status') else '' }}">
+                        Todos ({{ kpis.total }})
+                    </button>
+                    <button onclick="applyFilter('status', 'DISPONIVEL')" class="filter-btn {{ 'active' if request.args.get('status') == 'DISPONIVEL' else '' }}">
+                        Disponível ({{ kpis.disponiveis }})
+                    </button>
+                    <button onclick="applyFilter('status', 'EM_USO')" class="filter-btn {{ 'active' if request.args.get('status') == 'EM_USO' else '' }}">
+                        Em Uso ({{ kpis.em_uso }})
+                    </button>
+                    <button onclick="applyFilter('status', 'QUEBRADO')" class="filter-btn {{ 'active' if request.args.get('status') == 'QUEBRADO' else '' }}">
+                        Quebrado ({{ kpis.quebrados }})
+                    </button>
+                </div>
+            </div>
+
+            <!-- Seção de Categorias -->
+            <div class="border-t border-gray-600 pt-6">
+                <h4 class="text-sm font-medium text-gray-300 mb-3">Categorias</h4>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="applyFilter('categoria', 'NOTEBOOK')" class="filter-btn {{ 'active' if request.args.get('categoria') == 'NOTEBOOK' else '' }}">
+                        Notebooks
+                    </button>
+                    <button onclick="applyFilter('categoria', 'DESKTOP')" class="filter-btn {{ 'active' if request.args.get('categoria') == 'DESKTOP' else '' }}">
+                        Desktops
+                    </button>
+                    <button onclick="applyFilter('categoria', 'IMPRESSORA')" class="filter-btn {{ 'active' if request.args.get('categoria') == 'IMPRESSORA' else '' }}">
+                        Impressoras
+                    </button>
+                    <button onclick="applyFilter('categoria', 'TABLET')" class="filter-btn {{ 'active' if request.args.get('categoria') == 'TABLET' else '' }}">
+                        Tablets
+                    </button>
+                    <button onclick="applyFilter('categoria', 'PROJETOR')" class="filter-btn {{ 'active' if request.args.get('categoria') == 'PROJETOR' else '' }}">
+                        Projetores
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filtros Ativos -->
+            {% set active_filters = [] %}
+            {% if request.args.get('q') %}{% set _ = active_filters.append(('Busca', request.args.get('q'))) %}{% endif %}
+            {% if request.args.get('status') %}{% set _ = active_filters.append(('Status', 'Disponível' if request.args.get('status') == 'DISPONIVEL' else 'Em Uso' if request.args.get('status') == 'EM_USO' else 'Quebrado')) %}{% endif %}
+            {% if request.args.get('categoria') %}{% set _ = active_filters.append(('Categoria', request.args.get('categoria'))) %}{% endif %}
+            {% if request.args.get('setor') %}{% set _ = active_filters.append(('Setor', request.args.get('setor'))) %}{% endif %}
+
+            {% if active_filters %}
+            <div class="border-t border-gray-600 pt-6">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="text-sm font-medium text-blue-300">Filtros Ativos ({{ active_filters|length }})</h4>
+                    <button onclick="clearAllFilters()" class="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded border border-red-400/30 hover:bg-red-400/10 transition-colors">
+                        Limpar Todos
+                    </button>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    {% for filter_type, filter_value in active_filters %}
+                    <span class="filter-tag">
+                        {{ filter_type }}: {{ filter_value }}
+                        <button onclick="removeFilter('{{ filter_type.lower() }}')" class="text-blue-300 hover:text-white">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Filtros Avançados -->
+            <div class="border-t border-gray-600 pt-6">
+                <details class="group">
+                    <summary class="flex items-center justify-between cursor-pointer text-sm font-medium text-gray-300 hover:text-white transition-colors">
+                        <span>Filtros Avançados</span>
+                        <svg class="w-4 h-4 transform group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </summary>
+                    <form method="GET" class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-800/50 rounded-lg border border-gray-600">
+                        <input type="hidden" name="q" value="{{ request.args.get('q', '') }}">
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Setor</label>
+                            <select name="setor" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                                <option value="">Todos</option>
+                                {% for setor in ['TI', 'CJ', 'CCA', 'CEI', 'ADMINISTRATIVO', 'RH', 'FINANCEIRO'] %}
+                                <option value="{{ setor }}" {{ 'selected' if request.args.get('setor') == setor }}>{{ setor }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Marca</label>
+                            <input type="text" name="marca" placeholder="Ex: Dell, HP..." value="{{ request.args.get('marca', '') }}"
+                                   class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                        </div>
+                        
+                        <div class="flex items-end">
+                            <button type="submit" class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-500 transition-colors font-medium">
+                                Aplicar Filtros
+                            </button>
+                        </div>
+                    </form>
+                </details>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Equipamentos -->
+    <div class="bg-gray-800 rounded-xl overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-700">
+            <h3 class="text-lg font-semibold text-white">Lista de Equipamentos</h3>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-700">
+                <thead class="table-header">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">ID</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Equipamento</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Categoria</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Localização</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="table-body divide-y divide-gray-700">
+                    {% if equipamentos and equipamentos.items %}
+                        {% for equipamento in equipamentos.items %}
+                        <tr class="hover:bg-blue-700/50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">#{{ "%03d"|format(equipamento.id) }}</td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        <div class="h-10 w-10 rounded-lg bg-gray-700 flex items-center justify-center">
+                                            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-white">{{ equipamento.name_response }}</div>
+                                        <div class="text-sm text-gray-400">{{ equipamento.marca_category }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/50 text-blue-300">
+                                    {{ equipamento.equipamento_category }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if equipamento.emprestimo == 'EM_USO' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-900/50 text-yellow-300">Em Uso</span>
+                                {% elif equipamento.emprestimo == 'QUEBRADO' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900/50 text-red-300">Quebrado</span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/50 text-green-300">Disponível</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ equipamento.setor_category or 'N/A' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex items-center space-x-3">
+                                    <button onclick="openViewModal({{ equipamento.id }})" class="text-blue-400 hover:text-blue-300 transition-colors" title="Visualizar">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                    </button>
+                                    <button onclick="openEditModal({{ equipamento.id }})" class="text-yellow-400 hover:text-yellow-300 transition-colors" title="Editar">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-8 text-center text-gray-400">
+                                Nenhum equipamento encontrado.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginação -->
+        {% if equipamentos and equipamentos.pages > 1 %}
+        <div class="px-6 py-4 border-t border-gray-700 flex items-center justify-between">
+            <div class="text-sm text-gray-400">
+                Mostrando {{ equipamentos.per_page * (equipamentos.page - 1) + 1 }} a {{ equipamentos.per_page * equipamentos.page if equipamentos.page < equipamentos.pages else equipamentos.total }} de {{ equipamentos.total }} resultados
+            </div>
+            <div class="flex space-x-2">
+                {% if equipamentos.has_prev %}
+                    <a href="{{ url_for('equipamentos.list_equipamentos', page=equipamentos.prev_num, **request.args) }}" class="px-3 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors">Anterior</a>
+                {% endif %}
+                {% if equipamentos.has_next %}
+                    <a href="{{ url_for('equipamentos.list_equipamentos', page=equipamentos.next_num, **request.args) }}" class="px-3 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors">Próximo</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal de Visualização -->
+<div id="view-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-gray-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between p-6 border-b border-gray-700">
+            <h3 class="text-xl font-semibold text-white">Detalhes do Equipamento</h3>
+            <button onclick="closeModal('view-modal')" class="text-gray-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div id="view-content" class="p-6">
+            <!-- Conteúdo carregado via AJAX -->
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Edição -->
+<div id="edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-gray-800 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between p-6 border-b border-gray-700">
+            <h3 class="text-xl font-semibold text-white">Editar Equipamento</h3>
+            <button onclick="closeModal('edit-modal')" class="text-gray-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div id="edit-content" class="p-6">
+            <!-- Conteúdo carregado via AJAX -->
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Zerar Patrimônio -->
+<div id="clear-patrimonio-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
+    <div class="bg-gray-800 rounded-xl max-w-md w-full border-2 border-red-500">
+        <div class="flex items-center justify-between p-6 border-b border-gray-700">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-red-600 rounded-lg">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"/>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-red-400">ATENÇÃO - OPERAÇÃO PERIGOSA</h3>
+            </div>
+            <button onclick="closeModal('clear-patrimonio-modal')" class="text-gray-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="p-6">
+            <div class="mb-6">
+                <div class="bg-red-900/30 border border-red-500 rounded-lg p-4 mb-4">
+                    <p class="text-red-300 font-semibold mb-2">⚠️ Esta ação irá:</p>
+                    <ul class="text-red-200 text-sm space-y-1 ml-4">
+                        <li>• Apagar TODOS os equipamentos</li>
+                        <li>• Apagar TODOS os empréstimos</li>
+                        <li>• Apagar TODOS os logs de auditoria</li>
+                        <li>• Zerar todos os gráficos</li>
+                    </ul>
+                </div>
+                <p class="text-white mb-4">Para confirmar, digite exatamente as palavras de segurança:</p>
+                <p class="text-red-400 font-bold text-lg mb-4 text-center bg-gray-900 p-2 rounded border">APAGAR TUDO</p>
+            </div>
+            <form id="clear-patrimonio-form" action="{{ url_for('equipamentos.clear_all_equipamentos') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Palavras de Segurança:</label>
+                    <input type="text" id="confirmation-input" name="confirmation" 
+                           class="w-full p-3 bg-gray-700 border-2 border-red-500 rounded-lg text-white placeholder-gray-400 focus:border-red-400 focus:ring-2 focus:ring-red-500/20" 
+                           placeholder="Digite: APAGAR TUDO" 
+                           autocomplete="off" required>
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeModal('clear-patrimonio-modal')" 
+                            class="flex-1 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="confirm-clear-btn" disabled
+                            class="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-500 transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        ZERAR PATRIMÔNIO
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let searchTimeout;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('smart-search');
+    
+    searchInput.addEventListener('input', function(e) {
+        clearTimeout(searchTimeout);
+        const loading = document.getElementById('search-loading');
+        loading.classList.remove('hidden');
+        
+        searchTimeout = setTimeout(() => {
+            loading.classList.add('hidden');
+            if (e.target.value.length >= 2 || e.target.value.length === 0) {
+                performSearch();
+            }
+        }, 500);
+    });
+});
+
+function applyFilter(type, value) {
+    const params = new URLSearchParams(window.location.search);
+    
+    if (value) {
+        params.set(type, value);
+    } else {
+        params.delete(type);
+    }
+    
+    window.location.search = params.toString();
+}
+
+function removeFilter(type) {
+    const params = new URLSearchParams(window.location.search);
+    params.delete(type);
+    window.location.search = params.toString();
+}
+
+function clearSearch() {
+    document.getElementById('smart-search').value = '';
+    const params = new URLSearchParams(window.location.search);
+    params.delete('q');
+    window.location.search = params.toString();
+}
+
+function clearAllFilters() {
+    window.location.href = window.location.pathname;
+}
+
+function performSearch() {
+    const searchValue = document.getElementById('smart-search').value;
+    const params = new URLSearchParams(window.location.search);
+    
+    if (searchValue) {
+        params.set('q', searchValue);
+    } else {
+        params.delete('q');
+    }
+    
+    window.location.search = params.toString();
+}
+
+function openViewModal(id) {
+    fetch(`/equipamentos/${id}/view`)
+        .then(response => {
+            if (!response.ok) throw new Error('Erro na requisição');
+            return response.json();
+        })
+        .then(data => {
+            const content = `
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">ID</label>
+                            <p class="text-white bg-gray-700 p-3 rounded-lg">#${String(data.id).padStart(3, '0')}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Nome</label>
+                            <p class="text-white bg-gray-700 p-3 rounded-lg">${data.name_response}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Categoria</label>
+                            <p class="text-white bg-gray-700 p-3 rounded-lg">${data.equipamento_category}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Marca</label>
+                            <p class="text-white bg-gray-700 p-3 rounded-lg">${data.marca_category}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Setor</label>
+                            <p class="text-white bg-gray-700 p-3 rounded-lg">${data.setor_category}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Cargo</label>
+                            <p class="text-white bg-gray-700 p-3 rounded-lg">${data.cargo_category}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Status</label>
+                            <p class="text-white bg-gray-700 p-3 rounded-lg">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                    data.emprestimo === 'EM_USO' ? 'bg-yellow-900/50 text-yellow-300' : 
+                                    data.emprestimo === 'QUEBRADO' ? 'bg-red-900/50 text-red-300' : 
+                                    'bg-green-900/50 text-green-300'
+                                }">
+                                    ${data.emprestimo === 'EM_USO' ? 'Em Uso' : data.emprestimo === 'QUEBRADO' ? 'Quebrado' : 'Disponível'}
+                                </span>
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Compartilhado</label>
+                            <p class="text-white bg-gray-700 p-3 rounded-lg">${data.equipamento_compartilhado === 'SIM' ? 'Sim' : 'Não'}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">AnyDesk</label>
+                            <p class="text-white bg-gray-700 p-3 rounded-lg">${data.numero_anydesk}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Data de Cadastro</label>
+                            <p class="text-white bg-gray-700 p-3 rounded-lg">${data.data_cadastro}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Observações</label>
+                        <p class="text-white bg-gray-700 p-3 rounded-lg min-h-[80px]">${data.observacoes}</p>
+                    </div>
+                </div>
+            `;
+            document.getElementById('view-content').innerHTML = content;
+            document.getElementById('view-modal').classList.remove('hidden');
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            document.getElementById('view-content').innerHTML = '<p class="text-red-400">Erro ao carregar dados</p>';
+            document.getElementById('view-modal').classList.remove('hidden');
+        });
+}
+
+function openEditModal(id) {
+    fetch(`/equipamentos/${id}/edit-data`)
+        .then(response => {
+            if (!response.ok) throw new Error('Erro na requisição');
+            return response.json();
+        })
+        .then(data => {
+            const content = `
+                <form id="edit-form" action="/equipamentos/${data.id}/edit" method="POST" class="space-y-4">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Nome *</label>
+                            <input type="text" name="nome" value="${data.name_response}" required
+                                   class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Categoria *</label>
+                            <select name="categoria" required
+                                    class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                                <option value="NOTEBOOK" ${data.equipamento_category === 'NOTEBOOK' ? 'selected' : ''}>Notebook</option>
+                                <option value="DESKTOP" ${data.equipamento_category === 'DESKTOP' ? 'selected' : ''}>Desktop</option>
+                                <option value="IMPRESSORA" ${data.equipamento_category === 'IMPRESSORA' ? 'selected' : ''}>Impressora</option>
+                                <option value="TABLET" ${data.equipamento_category === 'TABLET' ? 'selected' : ''}>Tablet</option>
+                                <option value="PROJETOR" ${data.equipamento_category === 'PROJETOR' ? 'selected' : ''}>Projetor</option>
+                                <option value="TV" ${data.equipamento_category === 'TV' ? 'selected' : ''}>TV</option>
+                                <option value="CELULAR" ${data.equipamento_category === 'CELULAR' ? 'selected' : ''}>Celular</option>
+                                <option value="CAIXA DE SOM" ${data.equipamento_category === 'CAIXA DE SOM' ? 'selected' : ''}>Caixa de Som</option>
+                                <option value="PERIFERICOS" ${data.equipamento_category === 'PERIFERICOS' ? 'selected' : ''}>Periféricos</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Marca</label>
+                            <input type="text" name="marca" value="${data.marca_category}"
+                                   class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Setor</label>
+                            <select name="setor"
+                                    class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                                <option value="">Selecione...</option>
+                                <option value="TI" ${data.setor_category === 'TI' ? 'selected' : ''}>TI</option>
+                                <option value="CJ" ${data.setor_category === 'CJ' ? 'selected' : ''}>CJ</option>
+                                <option value="CCA" ${data.setor_category === 'CCA' ? 'selected' : ''}>CCA</option>
+                                <option value="CEI" ${data.setor_category === 'CEI' ? 'selected' : ''}>CEI</option>
+                                <option value="ADMINISTRATIVO" ${data.setor_category === 'ADMINISTRATIVO' ? 'selected' : ''}>Administrativo</option>
+                                <option value="RH" ${data.setor_category === 'RH' ? 'selected' : ''}>RH</option>
+                                <option value="FINANCEIRO" ${data.setor_category === 'FINANCEIRO' ? 'selected' : ''}>Financeiro</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Cargo</label>
+                            <select name="cargo"
+                                    class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                                <option value="">Selecione...</option>
+                                <option value="GERENTE" ${data.cargo_category === 'GERENTE' ? 'selected' : ''}>Gerente</option>
+                                <option value="COORDENADOR" ${data.cargo_category === 'COORDENADOR' ? 'selected' : ''}>Coordenador</option>
+                                <option value="ASSISTENTE" ${data.cargo_category === 'ASSISTENTE' ? 'selected' : ''}>Assistente</option>
+                                <option value="AUXILIAR" ${data.cargo_category === 'AUXILIAR' ? 'selected' : ''}>Auxiliar</option>
+                                <option value="ANALISTA" ${data.cargo_category === 'ANALISTA' ? 'selected' : ''}>Analista</option>
+                                <option value="EDUCADOR" ${data.cargo_category === 'EDUCADOR' ? 'selected' : ''}>Educador</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Status</label>
+                            <select name="emprestimo"
+                                    class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                                <option value="DISPONIVEL" ${data.emprestimo === 'DISPONIVEL' ? 'selected' : ''}>Disponível</option>
+                                <option value="EM_USO" ${data.emprestimo === 'EM_USO' ? 'selected' : ''}>Em Uso</option>
+                                <option value="QUEBRADO" ${data.emprestimo === 'QUEBRADO' ? 'selected' : ''}>Quebrado</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Compartilhado</label>
+                            <select name="compartilhado"
+                                    class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                                <option value="NAO" ${data.equipamento_compartilhado === 'NAO' ? 'selected' : ''}>Não</option>
+                                <option value="SIM" ${data.equipamento_compartilhado === 'SIM' ? 'selected' : ''}>Sim</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">AnyDesk</label>
+                            <input type="text" name="anydesk" value="${data.numero_anydesk}"
+                                   class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Observações</label>
+                        <textarea name="observacoes" rows="3"
+                                  class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">${data.observacoes}</textarea>
+                    </div>
+                    
+                    <div class="flex gap-3 pt-4">
+                        <button type="button" onclick="closeModal('edit-modal')" 
+                                class="flex-1 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition-colors">
+                            Cancelar
+                        </button>
+                        <button type="submit" 
+                                class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Salvar Alterações
+                        </button>
+                    </div>
+                </form>
+            `;
+            document.getElementById('edit-content').innerHTML = content;
+            document.getElementById('edit-modal').classList.remove('hidden');
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            document.getElementById('edit-content').innerHTML = '<p class="text-red-400">Erro ao carregar formulário</p>';
+            document.getElementById('edit-modal').classList.remove('hidden');
+        });
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+}
+
+// Funções para o modal de zerar patrimônio
+function openClearPatrimonioModal() {
+    document.getElementById('clear-patrimonio-modal').classList.remove('hidden');
+    document.getElementById('confirmation-input').value = '';
+    document.getElementById('confirm-clear-btn').disabled = true;
+}
+
+// Validar entrada de confirmação
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmationInput = document.getElementById('confirmation-input');
+    const confirmBtn = document.getElementById('confirm-clear-btn');
+    
+    if (confirmationInput && confirmBtn) {
+        confirmationInput.addEventListener('input', function() {
+            const isValid = this.value.trim().toUpperCase() === 'APAGAR TUDO';
+            confirmBtn.disabled = !isValid;
+            
+            if (isValid) {
+                confirmBtn.classList.remove('bg-gray-600');
+                confirmBtn.classList.add('bg-red-600', 'hover:bg-red-500');
+            } else {
+                confirmBtn.classList.add('bg-gray-600');
+                confirmBtn.classList.remove('bg-red-600', 'hover:bg-red-500');
+            }
+        });
+        
+        // Confirmação adicional antes do envio
+        document.getElementById('clear-patrimonio-form').addEventListener('submit', function(e) {
+            const confirmation = confirmationInput.value.trim().toUpperCase();
+            if (confirmation !== 'APAGAR TUDO') {
+                e.preventDefault();
+                alert('Confirmação inválida. Digite exatamente: APAGAR TUDO');
+                return false;
+            }
+            
+            const finalConfirm = confirm(
+                '⚠️ Última confirmação!\n\n' +
+                'Você tem CERTEZA ABSOLUTA que deseja APAGAR TODOS OS DADOS do patrimônio?\n\n' +
+                'Esta ação NÃO PODE SER DESFEITA!\n\n' +
+                'Clique OK para ZERAR TUDO ou Cancelar para abortar.'
+            );
+            
+            if (!finalConfirm) {
+                e.preventDefault();
+                return false;
+            }
+            
+            // Mostrar loading
+            confirmBtn.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div> Zerando...';
+            confirmBtn.disabled = true;
+            
+            // Redirecionar para dashboard após 3 segundos para atualizar gráficos
+            setTimeout(() => {
+                window.location.href = '/dashboard/';
+            }, 3000);
+        });
+    }
+});
+
+// Fechar modal ao clicar fora
+document.addEventListener('click', function(e) {
+    if (e.target.id === 'view-modal' || e.target.id === 'edit-modal') {
+        closeModal(e.target.id);
+    }
+});
+</script>
+{% endblock %}

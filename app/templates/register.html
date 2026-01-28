@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Cadastro no Sistema de Gestão Patrimonial - Crie sua conta para acessar o sistema">
+    <title>Cadastro | Sistema de Gestão Patrimonial</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            'brand-primary': '#1e40af',
+                            'brand-highlight': '#3b7ad8',
+                        },
+                    },
+                },
+            };
+        }
+    </script>
+    
+    <style>
+        .login-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .login-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        
+        @media (max-width: 640px) {
+            .login-card {
+                margin: 1rem;
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="login-bg min-h-screen flex items-center justify-center p-4">
+    <!-- Skip to main content -->
+    <a href="#register-form" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-brand-primary text-white px-4 py-2 rounded-lg z-50">
+        Pular para o formulário de cadastro
+    </a>
+
+    <div class="w-full max-w-md login-card rounded-2xl shadow-2xl p-6 sm:p-8 lg:p-10 transition-all duration-300 fade-in">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-4">
+                    {% for category, message in messages %}
+                        <div class="p-3 text-sm rounded-lg {% if category == 'danger' %}bg-red-100 text-red-700{% elif category == 'warning' %}bg-yellow-100 text-yellow-700{% else %}bg-green-100 text-green-700{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Logo -->
+        <div class="flex justify-center mb-6">
+            <img src="https://nicmcas.weebly.com/uploads/5/0/4/8/50482147/arrastao-logo.jpg" 
+                 alt="ArrasTão Logo" 
+                 class="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-xl object-contain">
+        </div>
+
+        <!-- Título -->
+        <div class="text-center mb-8">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
+                Criar Conta
+            </h1>
+            <p class="text-sm sm:text-base text-gray-600">
+                Cadastre-se para acessar o sistema
+            </p>
+        </div>
+
+        <!-- Formulário -->
+        <form id="register-form" method="POST" action="{{ url_for('auth.register') }}" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            
+            <div class="form-group mb-5">
+                <label for="name_user" class="block text-sm font-medium text-gray-700 mb-2">
+                    Nome Completo
+                </label>
+                <input
+                    type="text"
+                    id="name_user"
+                    name="name_user"
+                    placeholder="Digite seu nome completo"
+                    class="w-full p-3 sm:p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-highlight focus:border-brand-highlight transition duration-200"
+                    required
+                    autocomplete="name"
+                    aria-describedby="name-error"
+                >
+                <div id="name-error" class="text-red-600 text-sm mt-1 hidden" role="alert"></div>
+            </div>
+            
+            <div class="form-group mb-5">
+                <label for="user_name" class="block text-sm font-medium text-gray-700 mb-2">
+                    Nome de Usuário
+                </label>
+                <input
+                    type="text"
+                    id="user_name"
+                    name="user_name"
+                    placeholder="Digite seu nome de usuário"
+                    class="w-full p-3 sm:p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-highlight focus:border-brand-highlight transition duration-200"
+                    required
+                    autocomplete="username"
+                    aria-describedby="username-error"
+                >
+                <div id="username-error" class="text-red-600 text-sm mt-1 hidden" role="alert"></div>
+            </div>
+
+            <div class="form-group mb-5">
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                    Email
+                </label>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Digite seu email"
+                    class="w-full p-3 sm:p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-highlight focus:border-brand-highlight transition duration-200"
+                    required
+                    autocomplete="email"
+                    aria-describedby="email-error"
+                >
+                <div id="email-error" class="text-red-600 text-sm mt-1 hidden" role="alert"></div>
+            </div>
+
+            <div class="form-group mb-6">
+                <label for="user_password" class="block text-sm font-medium text-gray-700 mb-2">
+                    Senha
+                </label>
+                <div class="relative">
+                    <input
+                        type="password"
+                        id="user_password"
+                        name="user_password"
+                        placeholder="Digite sua senha"
+                        class="w-full p-3 sm:p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-highlight focus:border-brand-highlight transition duration-200 pr-12"
+                        required
+                        autocomplete="new-password"
+                        aria-describedby="password-error"
+                    >
+                    <button
+                        type="button"
+                        onclick="togglePasswordVisibility()"
+                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        aria-label="Mostrar/ocultar senha"
+                    >
+                        <svg id="eye-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                    </button>
+                </div>
+                <div id="password-error" class="text-red-600 text-sm mt-1 hidden" role="alert"></div>
+            </div>
+            
+            <!-- Botão de Cadastro -->
+            <button
+                type="submit"
+                class="btn btn-primary w-full py-3 sm:py-4 text-base font-semibold rounded-lg shadow-lg transition duration-300 ease-in-out hover:shadow-xl transform hover:scale-[1.02] mb-6"
+                id="register-btn"
+            >
+                <span id="register-text">Criar Conta</span>
+            </button>
+        </form>
+        
+        <!-- Link para login -->
+        <div class="text-center">
+            <p class="text-sm text-gray-600">
+                Já tem uma conta?
+                <a href="{{ url_for('auth.login_form') }}" class="text-brand-highlight font-semibold hover:text-brand-primary transition duration-150 underline">
+                    Faça Login
+                </a>
+            </p>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('user_password');
+            const eyeIcon = document.getElementById('eye-icon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"/>
+                `;
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                `;
+            }
+        }
+
+        // Validação do formulário
+        document.getElementById('register-form').addEventListener('submit', function(e) {
+            const name = document.getElementById('name_user');
+            const username = document.getElementById('user_name');
+            const email = document.getElementById('email');
+            const password = document.getElementById('user_password');
+            const registerBtn = document.getElementById('register-btn');
+            const registerText = document.getElementById('register-text');
+            
+            let isValid = true;
+            
+            // Limpar erros anteriores
+            document.getElementById('name-error').classList.add('hidden');
+            document.getElementById('username-error').classList.add('hidden');
+            document.getElementById('email-error').classList.add('hidden');
+            document.getElementById('password-error').classList.add('hidden');
+            
+            // Validar nome completo
+            if (!name.value.trim()) {
+                document.getElementById('name-error').textContent = 'Nome completo é obrigatório';
+                document.getElementById('name-error').classList.remove('hidden');
+                name.focus();
+                isValid = false;
+            }
+            
+            // Validar nome de usuário
+            if (!username.value.trim()) {
+                document.getElementById('username-error').textContent = 'Nome de usuário é obrigatório';
+                document.getElementById('username-error').classList.remove('hidden');
+                if (isValid) username.focus();
+                isValid = false;
+            }
+            
+            // Validar email
+            if (!email.value.trim()) {
+                document.getElementById('email-error').textContent = 'Email é obrigatório';
+                document.getElementById('email-error').classList.remove('hidden');
+                if (isValid) email.focus();
+                isValid = false;
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+                document.getElementById('email-error').textContent = 'Email inválido';
+                document.getElementById('email-error').classList.remove('hidden');
+                if (isValid) email.focus();
+                isValid = false;
+            }
+            
+            // Validar senha
+            if (!password.value.trim()) {
+                document.getElementById('password-error').textContent = 'Senha é obrigatória';
+                document.getElementById('password-error').classList.remove('hidden');
+                if (isValid) password.focus();
+                isValid = false;
+            } else if (password.value.length < 6) {
+                document.getElementById('password-error').textContent = 'Senha deve ter pelo menos 6 caracteres';
+                document.getElementById('password-error').classList.remove('hidden');
+                if (isValid) password.focus();
+                isValid = false;
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+                return;
+            }
+            
+            // Mostrar loading
+            registerBtn.disabled = true;
+            registerBtn.classList.add('loading');
+            registerText.innerHTML = '<span class="spinner mr-2"></span>Criando conta...';
+        });
+        
+        // Remover mensagens de erro ao digitar
+        document.getElementById('name_user').addEventListener('input', function() {
+            document.getElementById('name-error').classList.add('hidden');
+        });
+        
+        document.getElementById('user_name').addEventListener('input', function() {
+            document.getElementById('username-error').classList.add('hidden');
+        });
+        
+        document.getElementById('email').addEventListener('input', function() {
+            document.getElementById('email-error').classList.add('hidden');
+        });
+        
+        document.getElementById('user_password').addEventListener('input', function() {
+            document.getElementById('password-error').classList.add('hidden');
+        });
+    </script>
+</body>
+</html>

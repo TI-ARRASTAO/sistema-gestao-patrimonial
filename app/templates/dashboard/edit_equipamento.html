@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Equipamento</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="max-w-2xl mx-auto p-6">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Editar Equipamento</h2>
+                <button onclick="window.close()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <form action="/equipamentos/{{ equipamento.id }}/edit" method="POST" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nome *</label>
+                        <input type="text" name="nome" value="{{ equipamento.name_response }}" required
+                               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Categoria *</label>
+                        <select name="categoria" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="NOTEBOOK" {{ 'selected' if equipamento.equipamento_category == 'NOTEBOOK' }}>Notebook</option>
+                            <option value="DESKTOP" {{ 'selected' if equipamento.equipamento_category == 'DESKTOP' }}>Desktop</option>
+                            <option value="IMPRESSORA" {{ 'selected' if equipamento.equipamento_category == 'IMPRESSORA' }}>Impressora</option>
+                            <option value="TABLET" {{ 'selected' if equipamento.equipamento_category == 'TABLET' }}>Tablet</option>
+                            <option value="CELULAR" {{ 'selected' if equipamento.equipamento_category == 'CELULAR' }}>Celular</option>
+                            <option value="PROJETOR" {{ 'selected' if equipamento.equipamento_category == 'PROJETOR' }}>Projetor</option>
+                            <option value="ROTEADOR" {{ 'selected' if equipamento.equipamento_category == 'ROTEADOR' }}>Roteador</option>
+                            <option value="ACCESS POINT" {{ 'selected' if equipamento.equipamento_category == 'ACCESS POINT' }}>Access Point</option>
+                            <option value="TV" {{ 'selected' if equipamento.equipamento_category == 'TV' }}>TV</option>
+                            <option value="CAIXA DE SOM" {{ 'selected' if equipamento.equipamento_category == 'CAIXA DE SOM' }}>Caixa de Som</option>
+                            <option value="PERIFERICOS" {{ 'selected' if equipamento.equipamento_category == 'PERIFERICOS' }}>Periféricos</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Marca *</label>
+                        <input type="text" name="marca" value="{{ equipamento.marca_category }}" required
+                               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Setor</label>
+                        <select name="setor" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="">Selecione</option>
+                            <option value="CJ" {{ 'selected' if equipamento.setor_category == 'CJ' }}>CJ</option>
+                            <option value="CCA" {{ 'selected' if equipamento.setor_category == 'CCA' }}>CCA</option>
+                            <option value="CEI" {{ 'selected' if equipamento.setor_category == 'CEI' }}>CEI</option>
+                            <option value="ADMINISTRATIVO" {{ 'selected' if equipamento.setor_category == 'ADMINISTRATIVO' }}>Administrativo</option>
+                            <option value="RH" {{ 'selected' if equipamento.setor_category == 'RH' }}>RH</option>
+                            <option value="TI" {{ 'selected' if equipamento.setor_category == 'TI' }}>TI</option>
+                            <option value="COMUNICACAO" {{ 'selected' if equipamento.setor_category == 'COMUNICACAO' }}>Comunicação</option>
+                            <option value="SOCIAL" {{ 'selected' if equipamento.setor_category == 'SOCIAL' }}>Social</option>
+                            <option value="FINANCEIRO" {{ 'selected' if equipamento.setor_category == 'FINANCEIRO' }}>Financeiro</option>
+                            <option value="PRODUCAO" {{ 'selected' if equipamento.setor_category == 'PRODUCAO' }}>Produção</option>
+                            <option value="ARRASTART" {{ 'selected' if equipamento.setor_category == 'ARRASTART' }}>Arrastart</option>
+                            <option value="ENFERMARIA" {{ 'selected' if equipamento.setor_category == 'ENFERMARIA' }}>Enfermaria</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Cargo</label>
+                        <select name="cargo" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="">Selecione</option>
+                            <option value="GERENTE" {{ 'selected' if equipamento.cargo_category == 'GERENTE' }}>Gerente</option>
+                            <option value="COORDENADOR" {{ 'selected' if equipamento.cargo_category == 'COORDENADOR' }}>Coordenador</option>
+                            <option value="ASSISTENTE" {{ 'selected' if equipamento.cargo_category == 'ASSISTENTE' }}>Assistente</option>
+                            <option value="AUXILIAR" {{ 'selected' if equipamento.cargo_category == 'AUXILIAR' }}>Auxiliar</option>
+                            <option value="ANALISTA" {{ 'selected' if equipamento.cargo_category == 'ANALISTA' }}>Analista</option>
+                            <option value="EDUCADOR" {{ 'selected' if equipamento.cargo_category == 'EDUCADOR' }}>Educador</option>
+                            <option value="DIRETORIA" {{ 'selected' if equipamento.cargo_category == 'DIRETORIA' }}>Diretoria</option>
+                            <option value="ENFERMEIRA" {{ 'selected' if equipamento.cargo_category == 'ENFERMEIRA' }}>Enfermeira</option>
+                            <option value="RH" {{ 'selected' if equipamento.cargo_category == 'RH' }}>RH</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                        <select name="emprestimo" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="DISPONIVEL" {{ 'selected' if equipamento.emprestimo == 'DISPONIVEL' }}>Disponível</option>
+                            <option value="EM_USO" {{ 'selected' if equipamento.emprestimo == 'EM_USO' }}>Em Uso</option>
+                            <option value="QUEBRADO" {{ 'selected' if equipamento.emprestimo == 'QUEBRADO' }}>Quebrado</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Compartilhado</label>
+                        <select name="compartilhado" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="NAO" {{ 'selected' if equipamento.equipamento_compartilhado == 'NAO' }}>Não</option>
+                            <option value="SIM" {{ 'selected' if equipamento.equipamento_compartilhado == 'SIM' }}>Sim</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">AnyDesk</label>
+                        <input type="text" name="anydesk" value="{{ equipamento.numero_anydesk or '' }}"
+                               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Observações</label>
+                    <textarea name="observacoes" rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">{{ equipamento.observacoes or '' }}</textarea>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="window.close()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Remover o JavaScript AJAX - usar submit normal do formulário
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const submitBtn = document.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Salvando...';
+        });
+    </script>
+</body>
+</html>

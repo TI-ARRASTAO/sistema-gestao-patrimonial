@@ -1,0 +1,966 @@
+{% extends "base.html" %}
+
+{% block title %}Relatórios | Sistema de Gestão Patrimonial{% endblock %}
+{% block description %}Relatórios e análises do sistema de gestão patrimonial{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+
+<script>
+    if (typeof tailwind !== 'undefined') {
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                colors: {
+                    'dark': {
+                        '800': '#1e293b',
+                        '850': '#172033', 
+                        '900': '#0f172a',
+                        '950': '#020617',
+                    },
+                    'accent': {
+                        '400': '#60a5fa',
+                        '500': '#3b82f6',
+                        '600': '#2563eb',
+                    },
+                    'success-dark': '#10b981',
+                    'warning-dark': '#f59e0b',
+                    'danger-dark': '#ef4444',
+                    'info-dark': '#06b6d4',
+                },
+                animation: {
+                    'fade-in': 'fadeIn 0.5s ease-in-out',
+                    'slide-up': 'slideUp 0.3s ease-out',
+                    'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    'float': 'float 6s ease-in-out infinite',
+                },
+                keyframes: {
+                    fadeIn: {
+                        '0%': { opacity: '0' },
+                        '100%': { opacity: '1' },
+                    },
+                    slideUp: {
+                        '0%': { transform: 'translateY(10px)', opacity: '0' },
+                        '100%': { transform: 'translateY(0)', opacity: '1' },
+                    },
+                    float: {
+                        '0%, 100%': { transform: 'translateY(0px)' },
+                        '50%': { transform: 'translateY(-10px)' },
+                    },
+                },
+            },
+        },
+    };
+    }
+</script>
+
+<style>
+    .text-gradient {
+        background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+    }
+    
+    .card-hover {
+        transition: all 0.3s ease;
+    }
+    
+    .card-hover:hover {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(59, 130, 246, 0.2), 0 0 20px rgba(59, 130, 246, 0.15), 0 0 40px rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+</style>
+
+<script>
+    function generateReport(type) {
+        console.log('Gerando relatório:', type);
+        
+        if (type === 'localizacao') {
+            console.log('Tipo localização detectado');
+            // Buscar setores disponíveis primeiro
+            fetch('/relatorios/gerar/localizacao', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Resposta não é JSON válido');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Data received:', data);
+                if (data.success && data.data.requer_setor) {
+                    showSectorSelection(data.data.setores_disponiveis);
+                } else {
+                    showNotification('Erro ao carregar setores', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                showNotification('Erro ao carregar setores: ' + error.message, 'error');
+            });
+            return;
+        }
+        
+        // Para outros tipos de relatório
+        fetch(`/relatorios/gerar/${type}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showReportModal(data.data);
+                showNotification('Relatório gerado com sucesso!', 'success');
+            } else {
+                showNotification(data.error || 'Erro ao gerar relatório', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            showNotification('Erro ao gerar relatório', 'error');
+        });
+    }
+    
+    function showSectorSelection(setores) {
+        const modal = document.getElementById('sector-modal');
+        if (!modal) {
+            createSectorModal();
+        }
+        
+        const sectorList = document.getElementById('sector-list');
+        sectorList.innerHTML = '';
+        
+        setores.forEach(setor => {
+            const button = document.createElement('button');
+            button.className = 'w-full text-left px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors';
+            button.textContent = setor || 'Sem Setor';
+            button.onclick = () => generateLocationReport(setor);
+            sectorList.appendChild(button);
+        });
+        
+        document.getElementById('sector-modal').classList.remove('hidden');
+    }
+    
+    function createSectorModal() {
+        const modalHTML = `
+            <div id="sector-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 p-4">
+                <div class="relative top-20 mx-auto p-6 border w-full max-w-md shadow-lg rounded-lg bg-gray-800">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-white">Selecione o Setor</h3>
+                        <button onclick="closeSectorModal()" class="text-gray-400 hover:text-gray-300">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="sector-list" class="space-y-2 max-h-64 overflow-y-auto"></div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+    
+    function generateLocationReport(setor) {
+        closeSectorModal();
+        
+        fetch('/relatorios/gerar/localizacao/setor', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ setor: setor })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showReportModal(data.data);
+                showNotification('Relatório gerado com sucesso!', 'success');
+            } else {
+                showNotification(data.error || 'Erro ao gerar relatório', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            showNotification('Erro ao gerar relatório', 'error');
+        });
+    }
+    
+    function closeSectorModal() {
+        const modal = document.getElementById('sector-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+    
+    function showFormatModal(type) {
+        const modal = document.getElementById('format-modal');
+        if (!modal) {
+            createFormatModal();
+        }
+        
+        document.getElementById('format-modal').setAttribute('data-type', type);
+        document.getElementById('format-modal').classList.remove('hidden');
+    }
+    
+    function createFormatModal() {
+        const modalHTML = `
+            <div id="format-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 p-4">
+                <div class="relative top-20 mx-auto p-6 border w-full max-w-md shadow-lg rounded-lg bg-gray-800">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-white">Escolha o Formato</h3>
+                        <button onclick="closeFormatModal()" class="text-gray-400 hover:text-gray-300">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="space-y-3">
+                        <button onclick="selectFormat('pdf')" class="w-full bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-500 transition-colors flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                            </svg>
+                            Baixar PDF
+                        </button>
+                        <button onclick="selectFormat('excel')" class="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-500 transition-colors flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Baixar Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+    
+    function selectFormat(format) {
+        const type = document.getElementById('format-modal').getAttribute('data-type');
+        closeFormatModal();
+        downloadReport(type, format);
+    }
+    
+    function closeFormatModal() {
+        document.getElementById('format-modal').classList.add('hidden');
+    }
+    
+    function downloadReport(type, format) {
+        showNotification(`Gerando relatório ${format.toUpperCase()}...`, 'info');
+        
+        const link = document.createElement('a');
+        link.href = `/relatorios/exportar/${format}?tipo=${type}`;
+        link.download = `relatorio_${type}_${new Date().toISOString().slice(0,10)}.${format === 'pdf' ? 'html' : 'xls'}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showNotification('Download iniciado!', 'success');
+    }
+
+    function exportReport(format) {
+        showNotification(`Exportando dados em formato ${format.toUpperCase()}...`, 'info');
+        const link = document.createElement('a');
+        link.href = `/relatorios/exportar/${format}`;
+        link.download = `relatorio_${format}_${new Date().toISOString().slice(0,10)}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function showReportModal(data) {
+        const modal = document.getElementById('report-modal');
+        if (!modal) {
+            createReportModal();
+        }
+        
+        // Criar HTML formatado para o relatório
+        let content = `
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <h4 class="text-xl font-bold text-blue-400">${data.tipo}</h4>
+                    <button onclick="exportCurrentReport()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Exportar Excel
+                    </button>
+                </div>
+                <p class="text-gray-300">Gerado em: ${data.data_geracao}</p>
+        `;
+        
+        // Armazenar dados do relatório atual para exportação
+        window.currentReportData = data;
+        
+        // Relatório de Auditoria (formato especial)
+        if (data.tipo.includes('Auditoria')) {
+            content += `
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-gray-700 p-4 rounded-lg text-center">
+                        <div class="text-2xl font-bold text-blue-400">${data.total_acoes}</div>
+                        <div class="text-sm text-gray-300">Total de Ações</div>
+                    </div>
+                    <div class="bg-gray-700 p-4 rounded-lg text-center">
+                        <div class="text-2xl font-bold text-red-400">${data.acoes_criticas}</div>
+                        <div class="text-sm text-gray-300">Ações Críticas</div>
+                    </div>
+                    <div class="bg-gray-700 p-4 rounded-lg text-center">
+                        <div class="text-2xl font-bold text-green-400">${data.usuarios_ativos}</div>
+                        <div class="text-sm text-gray-300">Usuários Ativos</div>
+                    </div>
+                    <div class="bg-gray-700 p-4 rounded-lg text-center">
+                        <div class="text-2xl font-bold ${
+                            data.compliance_score >= 85 ? 'text-green-400' : 
+                            data.compliance_score >= 70 ? 'text-yellow-400' : 'text-red-400'
+                        }">${data.compliance_score}</div>
+                        <div class="text-sm text-gray-300">Score Compliance</div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-gray-700 p-4 rounded-lg">
+                        <h5 class="font-semibold mb-3 text-white">Ações por Tipo</h5>
+                        <div class="space-y-2">
+            `;
+            
+            Object.entries(data.acoes_por_tipo || {}).forEach(([tipo, count]) => {
+                content += `
+                    <div class="flex justify-between">
+                        <span class="text-gray-300">${tipo}</span>
+                        <span class="text-white font-semibold">${count}</span>
+                    </div>
+                `;
+            });
+            
+            content += `
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-700 p-4 rounded-lg">
+                        <h5 class="font-semibold mb-3 text-white">Ações por Usuário</h5>
+                        <div class="space-y-2 max-h-32 overflow-y-auto">
+            `;
+            
+            Object.entries(data.acoes_por_usuario || {}).forEach(([user, count]) => {
+                content += `
+                    <div class="flex justify-between">
+                        <span class="text-gray-300">${user}</span>
+                        <span class="text-white font-semibold">${count}</span>
+                    </div>
+                `;
+            });
+            
+            content += `
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-700 p-4 rounded-lg">
+                    <h5 class="font-semibold mb-3 text-white">Ações Críticas Recentes</h5>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead><tr class="border-b border-gray-600">
+                                <th class="text-left p-2">Data/Hora</th>
+                                <th class="text-left p-2">Usuário</th>
+                                <th class="text-left p-2">Ação</th>
+                                <th class="text-left p-2">Tabela</th>
+                            </tr></thead>
+                            <tbody>
+            `;
+            
+            (data.acoes_criticas_detalhes || []).forEach(action => {
+                content += `
+                    <tr class="border-b border-gray-600">
+                        <td class="p-2">${action.timestamp}</td>
+                        <td class="p-2">${action.user}</td>
+                        <td class="p-2"><span class="px-2 py-1 bg-red-600 text-white rounded text-xs">${action.action}</span></td>
+                        <td class="p-2">${action.table}</td>
+                    </tr>
+                `;
+            });
+            
+            content += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
+                    <h5 class="font-semibold mb-2 text-yellow-300">Recomendações</h5>
+                    <ul class="space-y-1">
+            `;
+            
+            (data.recomendacoes || []).forEach(rec => {
+                content += `<li class="text-yellow-200 text-sm">• ${rec}</li>`;
+            });
+            
+            content += '</ul></div>';
+        }
+        // Outros tipos de relatório (formato original)
+        else if (data.equipamentos) {
+            content += `
+                <div class="bg-gray-700 p-4 rounded-lg">
+                    <h5 class="font-semibold mb-2">Total: ${data.total} equipamentos</h5>
+                    <div class="max-h-64 overflow-y-auto">
+                        <table class="w-full text-sm">
+                            <thead><tr class="border-b border-gray-600">
+                                <th class="text-left p-2">ID</th>
+                                <th class="text-left p-2">Nome</th>
+                                <th class="text-left p-2">Categoria</th>
+                                <th class="text-left p-2">Status</th>
+                            </tr></thead>
+                            <tbody>
+            `;
+            data.equipamentos.forEach(eq => {
+                content += `
+                    <tr class="border-b border-gray-600">
+                        <td class="p-2">${eq.id}</td>
+                        <td class="p-2">${eq.nome}</td>
+                        <td class="p-2">${eq.categoria}</td>
+                        <td class="p-2">${eq.status || 'N/A'}</td>
+                    </tr>
+                `;
+            });
+            content += '</tbody></table></div></div>';
+        } else {
+            // Para relatórios sem lista de equipamentos
+            Object.keys(data).forEach(key => {
+                if (key !== 'tipo' && key !== 'data_geracao') {
+                    content += `<p class="text-gray-300"><strong>${key}:</strong> ${data[key]}</p>`;
+                }
+            });
+        }
+        
+        content += '</div>';
+        
+        document.getElementById('report-content').innerHTML = content;
+        document.getElementById('report-modal').classList.remove('hidden');
+    }
+
+    function createReportModal() {
+        const modalHTML = `
+            <div id="report-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 p-4">
+                <div class="relative top-4 mx-auto p-6 border w-full max-w-4xl shadow-lg rounded-lg bg-gray-800">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-white">Relatório Gerado</h3>
+                        <button onclick="closeReportModal()" class="text-gray-400 hover:text-gray-300">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="report-content" class="text-white max-h-96 overflow-y-auto"></div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+
+    function exportCurrentReport() {
+        if (!window.currentReportData) {
+            showNotification('Nenhum relatório para exportar', 'error');
+            return;
+        }
+        
+        const data = window.currentReportData;
+        let tipo = 'inventario';
+        let setor = null;
+        
+        // Determinar tipo e parâmetros
+        if (data.tipo.includes('Inventário')) {
+            tipo = 'inventario';
+        } else if (data.tipo.includes('Empréstimos')) {
+            tipo = 'emprestimos';
+        } else if (data.tipo.includes('Auditoria')) {
+            tipo = 'auditoria';
+        } else if (data.tipo.includes('Localização')) {
+            tipo = 'localizacao';
+            setor = data.setor;
+        }
+        
+        // Construir URL
+        let url = `/relatorios/exportar/excel?tipo=${tipo}`;
+        if (setor) {
+            url += `&setor=${encodeURIComponent(setor)}`;
+        }
+        
+        showNotification('Gerando arquivo Excel...', 'info');
+        
+        // Fazer download
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `relatorio_${tipo}_${new Date().toISOString().slice(0,10)}.xls`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showNotification('Download iniciado!', 'success');
+    }
+
+    function closeReportModal() {
+        document.getElementById('report-modal').classList.add('hidden');
+        window.currentReportData = null;
+    }
+
+    function refreshData() {
+        showNotification('Atualizando dados...', 'info');
+        setTimeout(() => {
+            location.reload();
+        }, 1000);
+    }
+</script>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<header class="mb-6 sm:mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-16 sm:mt-0">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-white">
+                Relatórios e Análises
+            </h1>
+            <p class="mt-1 text-sm sm:text-base text-gray-400">
+                Visualize dados e gere relatórios do patrimônio
+            </p>
+            {% if current_user.is_authenticated %}
+            <p class="mt-2 text-lg text-blue-400 font-medium">
+                Bem-vindo, {{ current_user.name_user }}!
+            </p>
+            {% endif %}
+        </div>
+        
+        <div class="flex items-center space-x-2 sm:space-x-3">
+            {% if current_user.is_authenticated and current_user.role == 'ADMIN' %}
+            <button onclick="showClearAllModal()" 
+                    class="p-2 sm:p-3 rounded-lg bg-red-700 text-red-100 hover:bg-red-600 transition-colors touch-manipulation"
+                    title="Zerar Todo o Patrimônio" aria-label="Zerar patrimônio">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+            </button>
+            {% endif %}
+            <button onclick="refreshData()" 
+                    class="p-2 sm:p-3 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors touch-manipulation"
+                    title="Atualizar Dados" aria-label="Atualizar dados">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+            </button>
+
+            <div class="relative">
+                <button onclick="document.getElementById('export-menu').classList.toggle('hidden')" 
+                        class="p-2 sm:p-3 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors touch-manipulation"
+                        title="Exportar Dados" aria-label="Menu de exportação">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </button>
+                <div id="export-menu" class="hidden absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-lg border border-gray-700 z-10">
+                    <button onclick="exportReport('pdf')" class="w-full text-left px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-t-lg touch-manipulation">Exportar PDF</button>
+                    <button onclick="exportReport('excel')" class="w-full text-left px-4 py-3 text-gray-300 hover:bg-gray-700 touch-manipulation">Exportar Excel</button>
+                    <button onclick="exportReport('csv')" class="w-full text-left px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-b-lg touch-manipulation">Exportar CSV</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Quick Stats -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+    <div class="bg-gray-800 shadow-2xl shadow-black/50 rounded-xl p-6 border-l-4 border-blue-500 card-hover">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-400">Total de Equipamentos</p>
+                <p class="mt-2 text-3xl font-bold text-blue-400">{{ status_data.data | sum if status_data.data else 0 }}</p>
+                <p class="mt-1 text-xs text-gray-400">Cadastrados</p>
+            </div>
+            <div class="p-3 bg-blue-500/20 rounded-full ring-2 ring-blue-400/50">
+                <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-gray-800 shadow-2xl shadow-black/50 rounded-xl p-6 border-l-4 border-green-500 card-hover">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-400">Disponíveis</p>
+                <p class="mt-2 text-3xl font-bold text-green-400">{{ status_data.data[0] if status_data.data and status_data.data|length > 0 else 0 }}</p>
+                <p class="mt-1 text-xs text-gray-400">Para uso</p>
+            </div>
+            <div class="p-3 bg-green-500/20 rounded-full ring-2 ring-green-400/50">
+                <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-gray-800 shadow-2xl shadow-black/50 rounded-xl p-6 border-l-4 border-yellow-500 card-hover">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-400">Em Uso</p>
+                <p class="mt-2 text-3xl font-bold text-yellow-400">{{ status_data.data[1] if status_data.data and status_data.data|length > 1 else 0 }}</p>
+                <p class="mt-1 text-xs text-gray-400">Emprestados</p>
+            </div>
+            <div class="p-3 bg-yellow-500/20 rounded-full ring-2 ring-yellow-400/50">
+                <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-gray-800 shadow-2xl shadow-black/50 rounded-xl p-6 border-l-4 border-purple-500 card-hover">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-400">Categorias</p>
+                <p class="mt-2 text-3xl font-bold text-purple-400">{{ category_data.labels | length if category_data.labels else 0 }}</p>
+                <p class="mt-1 text-xs text-gray-400">Diferentes</p>
+            </div>
+            <div class="p-3 bg-purple-500/20 rounded-full ring-2 ring-purple-400/50">
+                <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Types -->
+<div class="bg-gray-800 shadow-2xl shadow-black/50 rounded-xl p-6 mb-8">
+    <h3 class="text-lg font-semibold text-white mb-6">Tipos de Relatórios</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="bg-gray-700 rounded-xl p-6 card-hover">
+            <div class="flex items-center mb-4">
+                <svg class="w-8 h-8 text-blue-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+                </svg>
+                <h4 class="text-lg font-semibold text-white">Inventário Geral</h4>
+            </div>
+            <p class="text-gray-300 mb-4">Relatório completo de todos os equipamentos cadastrados no sistema.</p>
+            <button onclick="generateReport('inventario')" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-500 transition-colors">
+                Gerar Relatório
+            </button>
+        </div>
+
+        <div class="bg-gray-700 rounded-xl p-6 card-hover">
+            <div class="flex items-center mb-4">
+                <svg class="w-8 h-8 text-yellow-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                </svg>
+                <h4 class="text-lg font-semibold text-white">Empréstimos</h4>
+            </div>
+            <p class="text-gray-300 mb-4">Relatório de equipamentos emprestados e histórico de movimentações.</p>
+            <button onclick="generateReport('emprestimos')" class="w-full bg-yellow-600 text-white py-2 px-4 rounded-lg hover:bg-yellow-500 transition-colors">
+                Gerar Relatório
+            </button>
+        </div>
+
+        <div class="bg-gray-700 rounded-xl p-6 card-hover">
+            <div class="flex items-center mb-4">
+                <svg class="w-8 h-8 text-purple-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                </svg>
+                <h4 class="text-lg font-semibold text-white">Manutenção</h4>
+            </div>
+            <p class="text-gray-300 mb-4">Relatório de equipamentos em manutenção e histórico de reparos.</p>
+            <button onclick="generateReport('manutencao')" class="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-500 transition-colors">
+                Gerar Relatório
+            </button>
+        </div>
+
+        <div class="bg-gray-700 rounded-xl p-6 card-hover">
+            <div class="flex items-center mb-4">
+                <svg class="w-8 h-8 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <h4 class="text-lg font-semibold text-white">Financeiro</h4>
+            </div>
+            <p class="text-gray-300 mb-4">Relatório de custos, depreciação e valor patrimonial.</p>
+            <button onclick="generateReport('financeiro')" class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-500 transition-colors">
+                Gerar Relatório
+            </button>
+        </div>
+
+        <div class="bg-gray-700 rounded-xl p-6 card-hover">
+            <div class="flex items-center mb-4">
+                <svg class="w-8 h-8 text-cyan-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <h4 class="text-lg font-semibold text-white">Por Localização</h4>
+            </div>
+            <p class="text-gray-300 mb-4">Relatório de equipamentos por setor e localização física.</p>
+            <button onclick="generateReport('localizacao')" class="w-full bg-cyan-600 text-white py-2 px-4 rounded-lg hover:bg-cyan-500 transition-colors">
+                Gerar Relatório
+            </button>
+        </div>
+
+        <div class="bg-gray-700 rounded-xl p-6 card-hover">
+            <div class="flex items-center mb-4">
+                <svg class="w-8 h-8 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.414-5.414a2 2 0 00-2.828 0L9 10.172 7.414 8.586a2 2 0 00-2.828 2.828l3 3a2 2 0 002.828 0l7-7a2 2 0 00-2.828-2.828z"/>
+                </svg>
+                <h4 class="text-lg font-semibold text-white">Auditoria e Compliance</h4>
+            </div>
+            <p class="text-gray-300 mb-4">Relatório detalhado de auditoria com análise de conformidade e segurança.</p>
+            <button onclick="generateReport('auditoria')" class="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-500 transition-colors">
+                Gerar Relatório
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="bg-gray-800 shadow-2xl shadow-black/50 rounded-xl p-6 animate-float">
+        <h3 class="text-lg font-semibold text-white mb-4">Status dos Equipamentos</h3>
+        <canvas id="statusChart" width="400" height="200"></canvas>
+    </div>
+
+    <div class="bg-gray-800 shadow-2xl shadow-black/50 rounded-xl p-6 animate-float">
+        <h3 class="text-lg font-semibold text-white mb-4">Equipamentos por Categoria</h3>
+        <canvas id="categoryChart" width="400" height="200"></canvas>
+    </div>
+</div>
+
+<div class="bg-gray-800 shadow-2xl shadow-black/50 rounded-xl p-6 animate-float">
+    <h3 class="text-lg font-semibold text-white mb-4">Movimentação Mensal</h3>
+    <canvas id="movementChart" width="800" height="300"></canvas>
+</div>
+{% endblock %}
+
+<!-- Modal de Limpeza Total -->
+<div id="clear-all-modal" class="hidden fixed inset-0 bg-red-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 p-4 flex items-center justify-center">
+    <div class="relative mx-auto p-6 border-2 border-red-500 w-full max-w-md shadow-2xl rounded-lg bg-gray-900">
+        <div class="text-center mb-6">
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+                <svg class="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-red-400 mb-2">⚠️ ZERAR PATRIMÔNIO!</h3>
+            <p class="text-white mb-4">Esta ação irá <strong class="text-red-400">APAGAR PERMANENTEMENTE</strong> TODOS os dados:</p>
+            <ul class="text-gray-300 text-sm mb-4 text-left">
+                <li>• Todos os equipamentos cadastrados</li>
+                <li>• Histórico de empréstimos</li>
+                <li>• Logs de auditoria</li>
+                <li>• Resetará numeração dos IDs</li>
+            </ul>
+            <p class="text-red-300 text-sm mb-6 font-bold">O patrimônio ficará COMPLETAMENTE ZERADO!</p>
+        </div>
+        
+        <form action="/equipamentos/clear-all" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-red-300 mb-2">
+                    Para confirmar, digite exatamente: <strong>APAGAR TUDO</strong>
+                </label>
+                <input type="text" name="confirmation" id="confirmation-input" required 
+                       class="w-full p-3 border-2 border-red-500 rounded-lg bg-gray-800 text-white focus:border-red-400 focus:outline-none"
+                       placeholder="Digite: APAGAR TUDO">
+            </div>
+            
+            <div class="flex flex-col gap-3">
+                <button type="submit" id="confirm-delete-btn" disabled 
+                        class="w-full bg-red-600 text-white py-3 px-4 rounded-lg font-bold disabled:bg-gray-600 disabled:cursor-not-allowed hover:bg-red-500 transition-colors">
+                    🗑️ CONFIRMAR EXCLUSÃO PERMANENTE
+                </button>
+                <button type="button" onclick="closeClearAllModal()" 
+                        class="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-500 transition-colors">
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% block extra_scripts %}
+<script>
+    // Click outside to close menus
+    document.addEventListener('click', function(event) {
+        const exportMenu = document.getElementById('export-menu');
+        const exportButton = event.target.closest('[onclick*="export-menu"]');
+        
+        if (!exportButton && !exportMenu.contains(event.target)) {
+            exportMenu.classList.add('hidden');
+        }
+        
+        // Close report modal when clicking outside
+        const reportModal = document.getElementById('report-modal');
+        if (reportModal && event.target === reportModal) {
+            closeReportModal();
+        }
+        
+        // Close format modal when clicking outside
+        const formatModal = document.getElementById('format-modal');
+        if (formatModal && event.target === formatModal) {
+            closeFormatModal();
+        }
+        
+        // Close sector modal when clicking outside
+        const sectorModal = document.getElementById('sector-modal');
+        if (sectorModal && event.target === sectorModal) {
+            closeSectorModal();
+        }
+    });
+
+    // Initialize charts
+    document.addEventListener('DOMContentLoaded', function() {
+        // Status Chart - usando dados reais
+        const statusCtx = document.getElementById('statusChart').getContext('2d');
+        new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ status_data.labels | tojson }},
+                datasets: [{
+                    data: {{ status_data.data | tojson }},
+                    backgroundColor: {{ status_data.colors | tojson }},
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { 
+                        position: 'bottom',
+                        labels: {
+                            color: '#ffffff'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Category Chart - usando dados reais
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(categoryCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ category_data.labels | tojson }},
+                datasets: [{
+                    label: 'Quantidade',
+                    data: {{ category_data.data | tojson }},
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { 
+                        display: false
+                    }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#ffffff'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#ffffff'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Movement Chart - usando dados reais
+        const movementCtx = document.getElementById('movementChart').getContext('2d');
+        new Chart(movementCtx, {
+            type: 'line',
+            data: {
+                labels: {{ movement_data.labels | tojson }},
+                datasets: [{
+                    label: 'Empréstimos',
+                    data: {{ movement_data.loans | tojson }},
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    tension: 0.4
+                }, {
+                    label: 'Devoluções',
+                    data: {{ movement_data.returns | tojson }},
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { 
+                        position: 'top',
+                        labels: {
+                            color: '#ffffff'
+                        }
+                    }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#ffffff'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#ffffff'
+                        }
+                    }
+                }
+            }
+        });
+    });
+
+    function showClearAllModal() {
+        document.getElementById('clear-all-modal').classList.remove('hidden');
+        document.getElementById('confirmation-input').focus();
+    }
+
+    function closeClearAllModal() {
+        document.getElementById('clear-all-modal').classList.add('hidden');
+        document.getElementById('confirmation-input').value = '';
+        document.getElementById('confirm-delete-btn').disabled = true;
+    }
+
+    // Validar confirmação em tempo real
+    document.addEventListener('DOMContentLoaded', function() {
+        const confirmationInput = document.getElementById('confirmation-input');
+        const confirmButton = document.getElementById('confirm-delete-btn');
+        
+        if (confirmationInput && confirmButton) {
+            confirmationInput.addEventListener('input', function() {
+                const isValid = this.value.trim().toUpperCase() === 'APAGAR TUDO';
+                confirmButton.disabled = !isValid;
+                
+                if (isValid) {
+                    confirmButton.classList.remove('bg-gray-600');
+                    confirmButton.classList.add('bg-red-600');
+                } else {
+                    confirmButton.classList.remove('bg-red-600');
+                    confirmButton.classList.add('bg-gray-600');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

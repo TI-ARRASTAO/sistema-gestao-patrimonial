@@ -1,0 +1,708 @@
+/**
+ * ANIMAÇÕES AVANÇADAS CSS - Sistema de Gestão Patrimonial
+ * Keyframes complexos e animações CSS puras para performance
+ */
+
+/* ===========================================
+   KEYFRAMES AVANÇADOS
+   =========================================== */
+
+/* Animações de entrada complexas */
+@keyframes advanced-fade-in-up {
+    0% {
+        opacity: 0;
+        transform: translateY(50px) scale(0.9);
+        filter: blur(10px);
+    }
+    50% {
+        opacity: 0.5;
+        transform: translateY(25px) scale(0.95);
+        filter: blur(5px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes advanced-fade-in-down {
+    0% {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.9);
+        filter: blur(10px);
+    }
+    50% {
+        opacity: 0.5;
+        transform: translateY(-25px) scale(0.95);
+        filter: blur(5px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes advanced-fade-in-left {
+    0% {
+        opacity: 0;
+        transform: translateX(-50px) scale(0.9);
+        filter: blur(10px);
+    }
+    50% {
+        opacity: 0.5;
+        transform: translateX(-25px) scale(0.95);
+        filter: blur(5px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes advanced-fade-in-right {
+    0% {
+        opacity: 0;
+        transform: translateX(50px) scale(0.9);
+        filter: blur(10px);
+    }
+    50% {
+        opacity: 0.5;
+        transform: translateX(25px) scale(0.95);
+        filter: blur(5px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+/* Animações de escala avançadas */
+@keyframes advanced-scale-in {
+    0% {
+        opacity: 0;
+        transform: scale(0.3) rotate(-10deg);
+        filter: blur(20px);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.1) rotate(2deg);
+        filter: blur(5px);
+    }
+    70% {
+        transform: scale(0.95) rotate(-1deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+        filter: blur(0);
+    }
+}
+
+@keyframes advanced-bounce-in {
+    0% {
+        opacity: 0;
+        transform: scale(0.3) translateY(50px);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05) translateY(-10px);
+    }
+    70% {
+        transform: scale(0.9) translateY(5px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Animações de rotação */
+@keyframes advanced-rotate-in {
+    0% {
+        opacity: 0;
+        transform: rotate(-180deg) scale(0.5);
+        filter: blur(15px);
+    }
+    50% {
+        opacity: 0.8;
+        transform: rotate(-90deg) scale(1.1);
+        filter: blur(5px);
+    }
+    100% {
+        opacity: 1;
+        transform: rotate(0deg) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes advanced-flip-in {
+    0% {
+        opacity: 0;
+        transform: rotateY(-90deg) scale(0.8);
+    }
+    50% {
+        opacity: 0.8;
+        transform: rotateY(-45deg) scale(1.05);
+    }
+    100% {
+        opacity: 1;
+        transform: rotateY(0deg) scale(1);
+    }
+}
+
+/* Animações de slide complexas */
+@keyframes advanced-slide-in-up {
+    0% {
+        opacity: 0;
+        transform: translateY(100%) scale(0.8);
+        filter: blur(10px);
+    }
+    50% {
+        opacity: 0.6;
+        transform: translateY(50%) scale(0.9);
+        filter: blur(5px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes advanced-slide-in-down {
+    0% {
+        opacity: 0;
+        transform: translateY(-100%) scale(0.8);
+        filter: blur(10px);
+    }
+    50% {
+        opacity: 0.6;
+        transform: translateY(-50%) scale(0.9);
+        filter: blur(5px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+/* Animações de morphing */
+@keyframes advanced-morph {
+    0% {
+        border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+        transform: scale(0.8) rotate(0deg);
+    }
+    25% {
+        border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+        transform: scale(1.1) rotate(90deg);
+    }
+    50% {
+        border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
+        transform: scale(0.9) rotate(180deg);
+    }
+    75% {
+        border-radius: 40% 60% 60% 40% / 60% 30% 60% 40%;
+        transform: scale(1.05) rotate(270deg);
+    }
+    100% {
+        border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+        transform: scale(1) rotate(360deg);
+    }
+}
+
+/* Animações de loading avançadas */
+@keyframes advanced-spinner {
+    0% {
+        transform: rotate(0deg) scale(1);
+        filter: hue-rotate(0deg);
+    }
+    25% {
+        transform: rotate(90deg) scale(1.1);
+        filter: hue-rotate(90deg);
+    }
+    50% {
+        transform: rotate(180deg) scale(0.9);
+        filter: hue-rotate(180deg);
+    }
+    75% {
+        transform: rotate(270deg) scale(1.05);
+        filter: hue-rotate(270deg);
+    }
+    100% {
+        transform: rotate(360deg) scale(1);
+        filter: hue-rotate(360deg);
+    }
+}
+
+@keyframes advanced-pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    }
+}
+
+@keyframes advanced-wave {
+    0% {
+        transform: translateX(-100%) skewX(-15deg);
+    }
+    100% {
+        transform: translateX(100%) skewX(-15deg);
+    }
+}
+
+/* Animações de hover complexas */
+@keyframes advanced-hover-lift {
+    0% {
+        transform: translateY(0) scale(1);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    50% {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    100% {
+        transform: translateY(-4px) scale(1.01);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+}
+
+@keyframes advanced-hover-glow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+        filter: brightness(1);
+    }
+    50% {
+        box-shadow: 0 0 20px 5px rgba(59, 130, 246, 0.6);
+        filter: brightness(1.1);
+    }
+    100% {
+        box-shadow: 0 0 30px 10px rgba(59, 130, 246, 0.4);
+        filter: brightness(1.05);
+    }
+}
+
+/* Animações de foco */
+@keyframes advanced-focus-ring {
+    0% {
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.3);
+        transform: scale(1.02);
+    }
+    100% {
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+        transform: scale(1);
+    }
+}
+
+/* Animações de transição de página */
+@keyframes advanced-page-enter {
+    0% {
+        opacity: 0;
+        transform: translateX(30px) scale(0.95);
+        filter: blur(10px);
+    }
+    50% {
+        opacity: 0.5;
+        transform: translateX(15px) scale(0.97);
+        filter: blur(5px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes advanced-page-exit {
+    0% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        filter: blur(0);
+    }
+    50% {
+        opacity: 0.5;
+        transform: translateX(-15px) scale(0.97);
+        filter: blur(5px);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(-30px) scale(0.95);
+        filter: blur(10px);
+    }
+}
+
+/* Animações de notificação */
+@keyframes advanced-notification-enter {
+    0% {
+        opacity: 0;
+        transform: translateX(100%) scale(0.8) rotate(10deg);
+        filter: blur(10px);
+    }
+    50% {
+        opacity: 0.8;
+        transform: translateX(50%) scale(1.05) rotate(5deg);
+        filter: blur(2px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0) scale(1) rotate(0deg);
+        filter: blur(0);
+    }
+}
+
+@keyframes advanced-notification-exit {
+    0% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        filter: blur(0);
+    }
+    50% {
+        opacity: 0.5;
+        transform: translateX(50%) scale(0.95);
+        filter: blur(5px);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(100%) scale(0.8);
+        filter: blur(10px);
+    }
+}
+
+/* ===========================================
+   CLASSES DE ANIMAÇÃO
+   =========================================== */
+
+/* Animações de entrada */
+.animate-advanced-fade-in-up {
+    animation: advanced-fade-in-up 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-advanced-fade-in-down {
+    animation: advanced-fade-in-down 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-advanced-fade-in-left {
+    animation: advanced-fade-in-left 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-advanced-fade-in-right {
+    animation: advanced-fade-in-right 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-advanced-scale-in {
+    animation: advanced-scale-in 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.animate-advanced-bounce-in {
+    animation: advanced-bounce-in 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.animate-advanced-rotate-in {
+    animation: advanced-rotate-in 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-advanced-flip-in {
+    animation: advanced-flip-in 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-advanced-slide-in-up {
+    animation: advanced-slide-in-up 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-advanced-slide-in-down {
+    animation: advanced-slide-in-down 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Animações especiais */
+.animate-advanced-morph {
+    animation: advanced-morph 4s ease-in-out infinite;
+}
+
+.animate-advanced-spinner {
+    animation: advanced-spinner 2s linear infinite;
+}
+
+.animate-advanced-pulse {
+    animation: advanced-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-advanced-wave {
+    animation: advanced-wave 2s linear infinite;
+}
+
+/* Animações de hover */
+.hover-advanced-lift:hover {
+    animation: advanced-hover-lift 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.hover-advanced-glow:hover {
+    animation: advanced-hover-glow 0.4s ease-out forwards;
+}
+
+/* Animações de foco */
+.focus-advanced-ring:focus {
+    animation: advanced-focus-ring 0.3s ease-out;
+}
+
+/* Animações de página */
+.page-enter {
+    animation: advanced-page-enter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.page-exit {
+    animation: advanced-page-exit 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Animações de notificação */
+.notification-enter {
+    animation: advanced-notification-enter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.notification-exit {
+    animation: advanced-notification-exit 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ===========================================
+   UTILITÁRIOS DE ANIMAÇÃO
+   =========================================== */
+
+/* Controle de animações */
+.animate-paused {
+    animation-play-state: paused;
+}
+
+.animate-running {
+    animation-play-state: running;
+}
+
+/* Delays escalonados */
+.animate-delay-100 { animation-delay: 0.1s; }
+.animate-delay-200 { animation-delay: 0.2s; }
+.animate-delay-300 { animation-delay: 0.3s; }
+.animate-delay-500 { animation-delay: 0.5s; }
+.animate-delay-700 { animation-delay: 0.7s; }
+.animate-delay-1000 { animation-delay: 1s; }
+
+/* Durações */
+.animate-duration-200 { animation-duration: 0.2s; }
+.animate-duration-300 { animation-duration: 0.3s; }
+.animate-duration-500 { animation-duration: 0.5s; }
+.animate-duration-700 { animation-duration: 0.7s; }
+.animate-duration-1000 { animation-duration: 1s; }
+
+/* Easing functions */
+.animate-ease-linear { animation-timing-function: linear; }
+.animate-ease-in { animation-timing-function: ease-in; }
+.animate-ease-out { animation-timing-function: ease-out; }
+.animate-ease-in-out { animation-timing-function: ease-in-out; }
+.animate-ease-bounce { animation-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+.animate-ease-elastic { animation-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+/* Direções */
+.animate-direction-normal { animation-direction: normal; }
+.animate-direction-reverse { animation-direction: reverse; }
+.animate-direction-alternate { animation-direction: alternate; }
+.animate-direction-alternate-reverse { animation-direction: alternate-reverse; }
+
+/* Iterações */
+.animate-infinite { animation-iteration-count: infinite; }
+.animate-once { animation-iteration-count: 1; }
+
+/* Fill modes */
+.animate-fill-none { animation-fill-mode: none; }
+.animate-fill-forwards { animation-fill-mode: forwards; }
+.animate-fill-backwards { animation-fill-mode: backwards; }
+.animate-fill-both { animation-fill-mode: both; }
+
+/* ===========================================
+   COMPONENTES ANIMADOS
+   =========================================== */
+
+/* Cards animados */
+.card-advanced-enter {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    animation: advanced-fade-in-up 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.card-advanced-enter:hover {
+    transform: translateY(-4px) scale(1.02);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Botões animados */
+.btn-advanced-pulse {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-advanced-pulse::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn-advanced-pulse:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+.btn-advanced-shine {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-advanced-shine::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.5s;
+}
+
+.btn-advanced-shine:hover::before {
+    left: 100%;
+}
+
+/* Formulários animados */
+.form-field-advanced {
+    position: relative;
+}
+
+.form-field-advanced input,
+.form-field-advanced textarea,
+.form-field-advanced select {
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.form-field-advanced input:focus,
+.form-field-advanced textarea:focus,
+.form-field-advanced select:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.15);
+}
+
+.form-field-advanced .form-label {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+}
+
+.form-field-advanced input:focus + .form-label,
+.form-field-advanced textarea:focus + .form-label,
+.form-field-advanced select:focus + .form-label {
+    transform: translateY(-1.5rem) scale(0.85);
+    color: #3b82f6;
+}
+
+/* Modais animados */
+.modal-advanced-enter {
+    opacity: 0;
+    transform: scale(0.8) translateY(-20px);
+    animation: advanced-scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.modal-advanced-exit {
+    animation: advanced-page-exit 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Tabelas animadas */
+.table-row-advanced {
+    opacity: 0;
+    transform: translateX(-20px);
+    animation: advanced-fade-in-right 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.table-row-advanced:nth-child(1) { animation-delay: 0.1s; }
+.table-row-advanced:nth-child(2) { animation-delay: 0.2s; }
+.table-row-advanced:nth-child(3) { animation-delay: 0.3s; }
+.table-row-advanced:nth-child(4) { animation-delay: 0.4s; }
+.table-row-advanced:nth-child(5) { animation-delay: 0.5s; }
+
+/* ===========================================
+   MEDIA QUERIES PARA ANIMAÇÕES
+   =========================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Reduzir intensidade das animações em mobile */
+    .animate-advanced-fade-in-up,
+    .animate-advanced-fade-in-down,
+    .animate-advanced-fade-in-left,
+    .animate-advanced-fade-in-right {
+        animation-duration: 0.6s;
+    }
+
+    .animate-advanced-scale-in,
+    .animate-advanced-bounce-in {
+        animation-duration: 0.7s;
+    }
+}
+
+/* ===========================================
+   JAVASCRIPT HOOKS PARA ANIMAÇÕES
+   =========================================== */
+
+.animate-trigger {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-trigger.animate-active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.stagger-children > * {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: advanced-fade-in-up 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.4s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.5s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.6s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.7s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.8s; }

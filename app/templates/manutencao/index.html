@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Gestão de Manutenção{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Gestão de Manutenção</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Manutenção</li>
+    </ol>
+
+    <!-- Cards de Estatísticas -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-primary text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>Total Equipamentos</div>
+                        <div class="h3 mb-0">{{ total_equipamentos }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-info text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>Total Manutenções</div>
+                        <div class="h3 mb-0">{{ total_manutencoes }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-danger text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>Vencidas</div>
+                        <div class="h3 mb-0">{{ manutencoes_vencidas|length }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-warning text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>Próximas (30 dias)</div>
+                        <div class="h3 mb-0">{{ manutencoes_proximas|length }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabelas -->
+    <div class="row">
+        <!-- Vencidas -->
+        <div class="col-xl-6">
+            <div class="card mb-4">
+                <div class="card-header bg-danger text-white">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    Manutenções Vencidas
+                </div>
+                <div class="card-body">
+                    {% if manutencoes_vencidas %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Equipamento</th>
+                                    <th>Data Prevista</th>
+                                    <th>Atraso</th>
+                                    <th>Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in manutencoes_vencidas %}
+                                <tr>
+                                    <td>{{ item.equipamento.name_response }}</td>
+                                    <td>{{ item.proxima_manutencao.strftime('%d/%m/%Y') }}</td>
+                                    <td class="text-danger">{{ item.dias_atraso }} dias</td>
+                                    <td>
+                                        <a href="{{ url_for('manutencao.agendar_manutencao', equipamento_id=item.equipamento.id) }}" class="btn btn-sm btn-primary">Agendar</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center my-3">Nenhuma manutenção vencida.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Próximas -->
+        <div class="col-xl-6">
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <i class="fas fa-clock me-1"></i>
+                    Próximas Manutenções
+                </div>
+                <div class="card-body">
+                    {% if manutencoes_proximas %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Equipamento</th>
+                                    <th>Data Prevista</th>
+                                    <th>Restante</th>
+                                    <th>Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in manutencoes_proximas %}
+                                <tr>
+                                    <td>{{ item.equipamento.name_response }}</td>
+                                    <td>{{ item.proxima_manutencao.strftime('%d/%m/%Y') }}</td>
+                                    <td>{{ item.dias_restantes }} dias</td>
+                                    <td>
+                                        <a href="{{ url_for('manutencao.agendar_manutencao', equipamento_id=item.equipamento.id) }}" class="btn btn-sm btn-primary">Agendar</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center my-3">Nenhuma manutenção próxima.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
